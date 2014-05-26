@@ -36,7 +36,7 @@ from SpiffWorkflow.bpmn.parser.util import *
 from SpiffWorkflow.bpmn.parser.task_parsers import *
 import xml.etree.ElementTree as ET
 
-class BpmnParser(object):
+class StaticFileSetBpmnParser(object):
     """
     The BpmnParser class is a pluggable base class that manages the parsing of a set of BPMN files.
     It is intended that this class will be overriden by an application that implements a BPMN engine.
@@ -169,5 +169,5 @@ class BpmnParser(object):
         """
         return self.get_process_parser(process_id_or_name).get_spec()
 
-
-
+#For backwards compatibility:
+BpmnParser = StaticFileSetBpmnParser
