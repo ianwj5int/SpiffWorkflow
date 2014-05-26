@@ -16,6 +16,7 @@ from __future__ import division
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
+import os
 import glob
 from SpiffWorkflow.bpmn.BpmnWorkflow import BpmnWorkflow
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
@@ -81,11 +82,6 @@ class BaseBpmnParser(object):
             return self.PARSER_CLASSES[tag]
         return None, None
 
-    def get_process_parser(self, process_id_or_name):
-        """
-        Returns the ProcessParser for the given process ID or name. It matches by name first.
-        """
-
     def create_process_parsers_from_bpmn(self, bpmn, svg=None, filename=None):
         """
         Add the given lxml representation of the BPMN file to the parser's set.
@@ -125,13 +121,6 @@ class BaseBpmnParser(object):
         """
         return None if documentation_node is None else documentation_node.text
 
-    def get_spec(self, process_id_or_name):
-        """
-        Parses the required subset of the BPMN files, in order to provide an instance of BpmnProcessSpec (i.e. WorkflowSpec)
-        for the given process ID or name. The Name is matched first.
-        """
-        return self.get_process_parser(process_id_or_name).get_spec()
-
 class StaticFileSetBpmnParser(BaseBpmnParser):
     """
     The StaticFileSetBpmnParser class uses a static set of BPMN files as the source of it's workflow specifictions.
@@ -158,6 +147,13 @@ class StaticFileSetBpmnParser(BaseBpmnParser):
             return self.process_parsers_by_name[process_id_or_name]
         else:
             return self.process_parsers[process_id_or_name]
+
+    def get_spec(self, process_id_or_name):
+        """
+        Parses the required subset of the BPMN files, in order to provide an instance of BpmnProcessSpec (i.e. WorkflowSpec)
+        for the given process ID or name. The Name is matched first.
+        """
+        return self.get_process_parser(process_id_or_name).get_spec()
 
     def add_bpmn_file(self, filename):
         """
@@ -200,7 +196,33 @@ class StaticFileSetBpmnParser(BaseBpmnParser):
 #For backwards compatibility:
 class BpmnParser(StaticFileSetBpmnParser):
     """
-    DEPRECATED: This class is only present in order to maintain backwards compatibility. Please use StaticFileSetBpmnParser
+    DEPRECATED: This class is only present in order to maintain backwards compatibility. Please use StaticFileSetBpmnParser or DynamicFileBasedBpmnParser
     """
     pass
 
+
+class DynamicFileBasedBpmnParser(BaseBpmnParser):
+    DYNAMICALLY_LOAD_SUB_PROCESSES = True
+
+    def __init__(self):
+        """
+        Constructor.
+        """
+        super(DynamicFileBasedBpmnParser, self).__init__()
+        self.process_parsers_by_url_and_id = {}
+
+    def get_spec(self, bpmn_file, process_id):
+        filename = os.path.abspath(bpmn_file)
+
+        if (filename, process_id) in self.process_parsers_by_url_and_id:
+            return self.process_parsers_by_url_and_id[(filename, process_id)].get_spec()
+
+        f = open(filename, 'r')
+        try:
+            bpmn = ET.parse(f)
+            for process_parser in self.create_process_parsers_from_bpmn(bpmn, svg=None, filename=filename):
+                self.process_parsers_by_url_and_id[(filename, process_parser.get_id())] = process_parser
+        finally:
+            f.close()
+
+        return self.process_parsers_by_url_and_id[(filename, process_id)].get_spec()

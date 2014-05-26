@@ -8,7 +8,8 @@ import unittest
 from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.storage.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.storage.CompactWorkflowSerializer import CompactWorkflowSerializer
-from tests.SpiffWorkflow.bpmn.PackagerForTests import PackagerForTests, DynamicallyLoadedSubWorkflowPackagerForTests
+from tests.SpiffWorkflow.bpmn.PackagerForTests import PackagerForTests
+from SpiffWorkflow.bpmn.parser.BpmnParser import DynamicFileBasedBpmnParser
 
 __author__ = 'matth'
 
@@ -104,8 +105,7 @@ class BpmnWorkflowTestCase(unittest.TestCase):
 
 class DynamicallyLoadedSubWorkflowTestCase(BpmnWorkflowTestCase):
 
-    def load_workflow_spec(self, filename, process_name):
+    def load_workflow_spec(self, filename, process_id):
         f = os.path.join(os.path.dirname(__file__), 'data', filename)
 
-        return BpmnSerializer().deserialize_workflow_spec(
-            DynamicallyLoadedSubWorkflowPackagerForTests.package_in_memory(process_name, f))
+        return DynamicFileBasedBpmnParser().get_spec(f, process_id)

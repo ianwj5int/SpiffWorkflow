@@ -3,12 +3,12 @@ import datetime
 import time
 from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.BpmnWorkflow import BpmnWorkflow
-from tests.SpiffWorkflow.bpmn.BpmnWorkflowTestCase import DynamicallyLoadedSubWorkflowTestCase
+from tests.SpiffWorkflow.bpmn.BpmnWorkflowTestCase import BpmnWorkflowTestCase
 
 __author__ = 'neilc'
 
 
-class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
+class NestedProcessesTest(BpmnWorkflowTestCase):
     def setUp(self):
         self.spec = self.load_spec()
 
