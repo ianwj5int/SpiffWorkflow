@@ -22,7 +22,7 @@
       <bpmn2:outgoing>SequenceFlow_3</bpmn2:outgoing>
     </bpmn2:userTask>
     <bpmn2:sequenceFlow id="SequenceFlow_3" name="Done" sourceRef="UserTask_1" targetRef="CallActivity_1"/>
-    <bpmn2:callActivity id="CallActivity_1" name="Call 03-A" calledElement="file:/home/matth/work/git/workflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/level-03-A.bpmn#level-03-A">
+    <bpmn2:callActivity id="CallActivity_1" name="Call 03-A" calledElement="level-03-A:level-03-A">
       <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
     </bpmn2:callActivity>
