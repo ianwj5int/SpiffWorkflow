@@ -88,7 +88,7 @@ class ProcessParser(object):
     def get_location_and_id(self, node, qname):
         if ':' in qname:
             namespace_prefix, idref = qname.split(':', 1)
-            namespace = node.nsmap.get(namespace_prefix)
+            namespace = node.ns_map.get(namespace_prefix)
             assert namespace
             return self.namespace_to_location_lookup[namespace], idref
         return self.filename, qname
@@ -105,7 +105,7 @@ class ProcessParser(object):
 
     def _init_import_location_lookup(self):
         self.namespace_to_location_lookup = {}
-        for bpmn_import in self.xpath('.//bpmn:import[@importType="http://www.omg.org/spec/BPMN/20100524/MODEL"]'):
+        for bpmn_import in self.doc_xpath('.//bpmn:import[@importType="http://www.omg.org/spec/BPMN/20100524/MODEL"]'):
             self.namespace_to_location_lookup[bpmn_import.get('namespace')] = bpmn_import.get('location')
 
     def _parse(self):

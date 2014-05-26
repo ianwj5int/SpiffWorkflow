@@ -121,7 +121,7 @@ class BaseBpmnParser(object):
         """
         return None if documentation_node is None else documentation_node.text
 
-    def resolve_process_parser(self, call_activity_task, called_element):
+    def resolve_process_parser(self, location, idref):
         """
         The subclass must implement this
         """
@@ -172,8 +172,8 @@ class StaticFileSetBpmnParser(BaseBpmnParser):
         else:
             return self.process_parsers[process_id_or_name]
 
-    def resolve_process_parser(self, call_activity_task, called_element):
-        return self.get_process_parser(called_element)
+    def resolve_process_parser(self, location, idref):
+        return self.get_process_parser(idref)
 
     def get_spec(self, process_id_or_name):
         """
@@ -238,14 +238,13 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         super(DynamicFileBasedBpmnParser, self).__init__()
         self.process_parsers_by_url_and_id = {}
 
-    def resolve_process_parser(self, call_activity_task, called_element):
-        pass
+    def resolve_process_parser(self, location, idref):
+        if location.startswith('file:/'):
+            location = location[len('file:'):]
+        filename = os.path.abspath(location)
 
-    def get_spec(self, bpmn_file, process_id):
-        filename = os.path.abspath(bpmn_file)
-
-        if (filename, process_id) in self.process_parsers_by_url_and_id:
-            return self.process_parsers_by_url_and_id[(filename, process_id)].get_spec()
+        if (filename, idref) in self.process_parsers_by_url_and_id:
+            return self.process_parsers_by_url_and_id[(filename, idref)]
 
         f = open(filename, 'r')
         try:
@@ -255,4 +254,7 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         finally:
             f.close()
 
-        return self.process_parsers_by_url_and_id[(filename, process_id)].get_spec()
+        return self.process_parsers_by_url_and_id[(filename, idref)]
+
+    def get_spec(self, bpmn_file, process_idref):
+        return self.resolve_process_parser(bpmn_file, process_idref).get_spec()

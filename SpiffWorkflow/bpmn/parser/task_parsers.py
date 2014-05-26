@@ -116,7 +116,7 @@ class CallActivityParser(TaskParser):
 
     def get_subprocess_parser(self):
         location, idref = self.process_parser.get_location_and_id(self.node, self.called_element)
-        return self.parser.resolve_process_parser(None, idref)
+        return self.parser.resolve_process_parser(location, idref)
 
 
 class ScriptTaskParser(TaskParser):
