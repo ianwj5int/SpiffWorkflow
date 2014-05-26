@@ -68,6 +68,10 @@ class BpmnParser(object):
     PROCESS_PARSER_CLASS = ProcessParser
     WORKFLOW_CLASS = BpmnWorkflow
 
+    #Set the following to False if you would like to load sub-process specs eagerly. This will allow the workflow spec that
+    #is loaded to have the subworkflow specs available for inspection before a process is actually running.
+    DYNAMICALLY_LOAD_SUB_PROCESSES = True
+
     def __init__(self):
         """
         Constructor.

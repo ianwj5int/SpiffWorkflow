@@ -25,7 +25,7 @@ class CallActivity(SubWorkflow, BpmnSpecMixin):
     Task Spec for a bpmn:callActivity node.
     """
 
-    def __init__(self, parent, name, wf_spec=None, wf_class=None, **kwargs):
+    def __init__(self, parent, name, wf_spec=None, wf_class=None, call_activity_parser=None, **kwargs):
         """
         Constructor.
 
@@ -34,16 +34,21 @@ class CallActivity(SubWorkflow, BpmnSpecMixin):
         """
         super(CallActivity, self).__init__(parent, name, None, **kwargs)
         self.spec = wf_spec
+        self.call_activity_parser = call_activity_parser
         self.wf_class = wf_class
 
     def test(self):
         TaskSpec.test(self)
 
     def _create_subworkflow(self, my_task):
-        return self.get_workflow_class()(self.spec, name=self.name,
+        return self.get_workflow_class()(self.spec or self._load_sub_workflow_spec(my_task), name=self.name,
             read_only = my_task.workflow.read_only,
             script_engine=my_task.workflow.outer_workflow.script_engine,
             parent = my_task.workflow)
+
+    def _load_sub_workflow_spec(self, my_task):
+        wf_spec = self.call_activity_parser.get_subprocess_parser().get_spec()
+        return wf_spec
 
     def get_workflow_class(self):
         """
