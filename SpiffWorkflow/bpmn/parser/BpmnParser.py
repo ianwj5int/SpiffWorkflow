@@ -199,4 +199,8 @@ class StaticFileSetBpmnParser(BaseBpmnParser):
 
 #For backwards compatibility:
 class BpmnParser(StaticFileSetBpmnParser):
+    """
+    DEPRECATED: This class is only present in order to maintain backwards compatibility. Please use StaticFileSetBpmnParser
+    """
     pass
+
