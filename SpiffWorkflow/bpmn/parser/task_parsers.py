@@ -107,8 +107,7 @@ class CallActivityParser(TaskParser):
     """
 
     def create_task(self):
-        if not self.parser.DYNAMICALLY_LOAD_SUB_PROCESSES:
-            wf_spec = self.get_subprocess_parser().get_spec()
+        wf_spec = None if self.parser.DYNAMICALLY_LOAD_SUB_PROCESSES else self.get_subprocess_parser().get_spec()
         return self.spec_class(self.spec, self.get_task_spec_name(), wf_spec=wf_spec, wf_class=self.parser.WORKFLOW_CLASS, call_activity_parser=self, description=self.node.get('name', None))
 
     def get_subprocess_parser(self):

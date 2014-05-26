@@ -6,7 +6,7 @@ from __future__ import division
 from io import BytesIO
 
 from SpiffWorkflow.bpmn.storage.Packager import Packager, main
-from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import TestBpmnParser
+from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import TestBpmnParser, DynamicallyLoadedSubWorflowTestBpmnParser
 
 __author__ = 'matth'
 
@@ -21,6 +21,10 @@ class PackagerForTests(Packager):
         p.add_bpmn_files_by_glob(workflow_files)
         p.create_package()
         return s.getvalue()
+
+class DynamicallyLoadedSubWorkflowPackagerForTests(PackagerForTests):
+
+    PARSER_CLASS = DynamicallyLoadedSubWorflowTestBpmnParser
 
 if __name__ == '__main__':
     main(packager_class=PackagerForTests)

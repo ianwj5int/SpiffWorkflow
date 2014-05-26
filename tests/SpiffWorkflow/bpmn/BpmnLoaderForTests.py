@@ -55,3 +55,6 @@ class TestBpmnParser(BpmnParser):
         if cond is not None:
             return cond
         return "choice == '%s'" % sequence_flow_node.get('name', None)
+
+class DynamicallyLoadedSubWorflowTestBpmnParser(TestBpmnParser):
+    DYNAMICALLY_LOAD_SUB_PROCESSES = True
