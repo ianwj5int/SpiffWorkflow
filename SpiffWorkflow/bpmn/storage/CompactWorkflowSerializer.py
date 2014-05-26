@@ -95,7 +95,7 @@ class _BpmnProcessSpecState(object):
             if route is None:
                 raise UnrecoverableWorkflowChange('No path found for route \'%s\'' % transition)
             route_to_parent_complete = route + [route[-1].outputs[0]]
-            route = route + [route[-1].spec.start]
+            route = route + [route[-1]._get_spec().start]
         route = self._breadth_first_transition_search(transition, route, taken_routes=taken_routes)
         if route is None:
             raise UnrecoverableWorkflowChange('No path found for route \'%s\'' % transition)
@@ -150,7 +150,7 @@ class _BpmnProcessSpecState(object):
             leaf_tasks.append(task)
         else:
             if not task._is_finished():
-                if issubclass(task.task_spec.__class__, SubWorkflow) and task.task_spec.spec.start in [o.task_spec for o in route_node.outgoing]:
+                if issubclass(task.task_spec.__class__, SubWorkflow) and task.task_spec._get_spec().start in [o.task_spec for o in route_node.outgoing]:
                     self._go_in_to_subworkflow(task, [n.task_spec for n in route_node.outgoing])
                 else:
                     self._complete_task_silent(task, [n.task_spec for n in route_node.outgoing])

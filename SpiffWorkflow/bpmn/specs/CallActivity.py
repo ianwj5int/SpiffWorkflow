@@ -41,14 +41,17 @@ class CallActivity(SubWorkflow, BpmnSpecMixin):
         TaskSpec.test(self)
 
     def _create_subworkflow(self, my_task):
-        return self.get_workflow_class()(self.spec or self._load_sub_workflow_spec(my_task), name=self.name,
+        return self.get_workflow_class()(self.spec or self._load_sub_workflow_spec(), name=self.name,
             read_only = my_task.workflow.read_only,
             script_engine=my_task.workflow.outer_workflow.script_engine,
             parent = my_task.workflow)
 
-    def _load_sub_workflow_spec(self, my_task):
+    def _load_sub_workflow_spec(self):
         wf_spec = self.call_activity_parser.get_subprocess_parser().get_spec()
         return wf_spec
+
+    def _get_spec(self):
+        return self.spec if self.spec else self._load_sub_workflow_spec()
 
     def get_workflow_class(self):
         """
