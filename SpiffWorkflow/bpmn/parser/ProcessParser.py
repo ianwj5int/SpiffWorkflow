@@ -47,6 +47,8 @@ class ProcessParser(object):
         self.filename = filename
         self.id_to_lane_lookup = None
         self._init_lane_lookup()
+        self.namespace_to_location_lookup = None
+        self._init_import_location_lookup()
 
     def get_id(self):
         """
@@ -83,6 +85,14 @@ class ProcessParser(object):
         """
         return self.id_to_lane_lookup.get(id, None)
 
+    def get_location_and_id(self, node, qname):
+        if ':' in qname:
+            namespace_prefix, idref = qname.split(':', 1)
+            namespace = node.nsmap.get(namespace_prefix)
+            assert namespace
+            return self.namespace_to_location_lookup[namespace], idref
+        return self.filename, qname
+
     def _init_lane_lookup(self):
         self.id_to_lane_lookup = {}
         for lane in self.xpath('.//bpmn:lane'):
@@ -92,6 +102,11 @@ class ProcessParser(object):
                     id = ref.text
                     if id:
                         self.id_to_lane_lookup[id] = name
+
+    def _init_import_location_lookup(self):
+        self.namespace_to_location_lookup = {}
+        for bpmn_import in self.xpath('.//bpmn:import[@importType="http://www.omg.org/spec/BPMN/20100524/MODEL"]'):
+            self.namespace_to_location_lookup[bpmn_import.get('namespace')] = bpmn_import.get('location')
 
     def _parse(self):
         start_node_list = self.xpath('.//bpmn:startEvent')

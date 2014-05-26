@@ -107,14 +107,17 @@ class CallActivityParser(TaskParser):
     """
 
     def create_task(self):
-        wf_spec = None if self.parser.DYNAMICALLY_LOAD_SUB_PROCESSES else self.get_subprocess_parser().get_spec()
+        self.called_element = self.node.get('calledElement', None)
+        if not self.called_element:
+            raise ValidationException('No "calledElement" attribute for Call Activity.', node=self.node, filename=self.process_parser.filename)
+
+        wf_spec = None if self.parser._DYNAMICALLY_LOAD_SUB_PROCESSES else self.get_subprocess_parser().get_spec()
         return self.spec_class(self.spec, self.get_task_spec_name(), wf_spec=wf_spec, wf_class=self.parser.WORKFLOW_CLASS, call_activity_parser=self, description=self.node.get('name', None))
 
     def get_subprocess_parser(self):
-        calledElement = self.node.get('calledElement', None)
-        if not calledElement:
-            raise ValidationException('No "calledElement" attribute for Call Activity.', node=self.node, filename=self.process_parser.filename)
-        return self.parser.get_process_parser(calledElement)
+        location, idref = self.process_parser.get_location_and_id(self.node, self.called_element)
+        return self.parser.resolve_process_parser(None, idref)
+
 
 class ScriptTaskParser(TaskParser):
     """

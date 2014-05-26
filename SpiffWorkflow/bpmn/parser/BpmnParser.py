@@ -68,7 +68,7 @@ class BaseBpmnParser(object):
 
     PROCESS_PARSER_CLASS = ProcessParser
     WORKFLOW_CLASS = BpmnWorkflow
-    DYNAMICALLY_LOAD_SUB_PROCESSES = None
+    _DYNAMICALLY_LOAD_SUB_PROCESSES = None
 
     def __init__(self):
         """
@@ -121,6 +121,30 @@ class BaseBpmnParser(object):
         """
         return None if documentation_node is None else documentation_node.text
 
+    def resolve_process_parser(self, call_activity_task, called_element):
+        """
+        The subclass must implement this
+        """
+
+    def parse_file(self, file):
+
+        events = "start", "start-ns", "end-ns"
+
+        root = None
+        ns_map = []
+
+        for event, elem in ET.iterparse(file, events):
+            if event == "start-ns":
+                ns_map.append(elem)
+            elif event == "end-ns":
+                ns_map.pop()
+            elif event == "start":
+                if root is None:
+                    root = elem
+                elem.ns_map = dict(ns_map)
+
+        return ET.ElementTree(root)
+
 class StaticFileSetBpmnParser(BaseBpmnParser):
     """
     The StaticFileSetBpmnParser class uses a static set of BPMN files as the source of it's workflow specifictions.
@@ -128,7 +152,7 @@ class StaticFileSetBpmnParser(BaseBpmnParser):
 
     """
 
-    DYNAMICALLY_LOAD_SUB_PROCESSES = False
+    _DYNAMICALLY_LOAD_SUB_PROCESSES = False
 
 
     def __init__(self):
@@ -147,6 +171,9 @@ class StaticFileSetBpmnParser(BaseBpmnParser):
             return self.process_parsers_by_name[process_id_or_name]
         else:
             return self.process_parsers[process_id_or_name]
+
+    def resolve_process_parser(self, call_activity_task, called_element):
+        return self.get_process_parser(called_element)
 
     def get_spec(self, process_id_or_name):
         """
@@ -174,7 +201,7 @@ class StaticFileSetBpmnParser(BaseBpmnParser):
         for filename in filenames:
             f = open(filename, 'r')
             try:
-                self.add_bpmn_xml(ET.parse(f), filename=filename)
+                self.add_bpmn_xml(self.parse_file(f), filename=filename)
             finally:
                 f.close()
 
@@ -202,7 +229,7 @@ class BpmnParser(StaticFileSetBpmnParser):
 
 
 class DynamicFileBasedBpmnParser(BaseBpmnParser):
-    DYNAMICALLY_LOAD_SUB_PROCESSES = True
+    _DYNAMICALLY_LOAD_SUB_PROCESSES = True
 
     def __init__(self):
         """
@@ -210,6 +237,9 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         """
         super(DynamicFileBasedBpmnParser, self).__init__()
         self.process_parsers_by_url_and_id = {}
+
+    def resolve_process_parser(self, call_activity_task, called_element):
+        pass
 
     def get_spec(self, bpmn_file, process_id):
         filename = os.path.abspath(bpmn_file)
@@ -219,7 +249,7 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
 
         f = open(filename, 'r')
         try:
-            bpmn = ET.parse(f)
+            bpmn = self.parse_file(f)
             for process_parser in self.create_process_parsers_from_bpmn(bpmn, svg=None, filename=filename):
                 self.process_parsers_by_url_and_id[(filename, process_parser.get_id())] = process_parser
         finally:
