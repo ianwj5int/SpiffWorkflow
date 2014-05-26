@@ -36,10 +36,10 @@ from SpiffWorkflow.bpmn.parser.util import *
 from SpiffWorkflow.bpmn.parser.task_parsers import *
 import xml.etree.ElementTree as ET
 
-class StaticFileSetBpmnParser(object):
+class BaseBpmnParser(object):
     """
-    The BpmnParser class is a pluggable base class that manages the parsing of a set of BPMN files.
-    It is intended that this class will be overriden by an application that implements a BPMN engine.
+    The BpmnParser class hierarchy is a set of pluggable base classes that manage the parsing of a set of BPMN files.
+    It is intended that one of the classes will be selected and overriden by an application that implements a BPMN engine.
 
     Extension points:
     OVERRIDE_PARSER_CLASSES provides a map from full BPMN tag name to a TaskParser and Task class.
@@ -67,17 +67,12 @@ class StaticFileSetBpmnParser(object):
 
     PROCESS_PARSER_CLASS = ProcessParser
     WORKFLOW_CLASS = BpmnWorkflow
-
-    #Set the following to False if you would like to load sub-process specs eagerly. This will allow the workflow spec that
-    #is loaded to have the subworkflow specs available for inspection before a process is actually running.
-    DYNAMICALLY_LOAD_SUB_PROCESSES = True
+    DYNAMICALLY_LOAD_SUB_PROCESSES = None
 
     def __init__(self):
         """
         Constructor.
         """
-        self.process_parsers = {}
-        self.process_parsers_by_name = {}
 
     def _get_parser_class(self, tag):
         if tag in self.OVERRIDE_PARSER_CLASSES:
@@ -85,6 +80,75 @@ class StaticFileSetBpmnParser(object):
         elif tag in self.PARSER_CLASSES:
             return self.PARSER_CLASSES[tag]
         return None, None
+
+    def get_process_parser(self, process_id_or_name):
+        """
+        Returns the ProcessParser for the given process ID or name. It matches by name first.
+        """
+
+    def create_process_parsers_from_bpmn(self, bpmn, svg=None, filename=None):
+        """
+        Add the given lxml representation of the BPMN file to the parser's set.
+
+        :param svg: Optionally, provide the text data for the SVG of the BPMN file
+        :param filename: Optionally, provide the source filename.
+        """
+        xpath = xpath_eval(bpmn)
+
+        processes = xpath('.//bpmn:process')
+        for process in processes:
+            process_parser = self.PROCESS_PARSER_CLASS(self, process, svg, filename=filename, doc_xpath=xpath)
+            yield process_parser
+
+    def _parse_condition(self, outgoing_task, outgoing_task_node, sequence_flow_node, task_parser=None):
+        xpath = xpath_eval(sequence_flow_node)
+        condition_expression_node = conditionExpression = first(xpath('.//bpmn:conditionExpression'))
+        if conditionExpression is not None:
+            conditionExpression = conditionExpression.text
+        return self.parse_condition(conditionExpression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser)
+
+    def parse_condition(self, condition_expression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser):
+        """
+        Pre-parse the given condition expression, and return the parsed version. The returned version will be passed to the Script Engine
+        for evaluation.
+        """
+        return condition_expression
+
+    def _parse_documentation(self, node, task_parser=None, xpath=None):
+        xpath = xpath or xpath_eval(node)
+        documentation_node = first(xpath('.//bpmn:documentation'))
+        return self.parse_documentation(documentation_node, node, xpath, task_parser=task_parser)
+
+    def parse_documentation(self, documentation_node, node, node_xpath, task_parser=None):
+        """
+        Pre-parse the documentation node for the given node and return the text.
+        """
+        return None if documentation_node is None else documentation_node.text
+
+    def get_spec(self, process_id_or_name):
+        """
+        Parses the required subset of the BPMN files, in order to provide an instance of BpmnProcessSpec (i.e. WorkflowSpec)
+        for the given process ID or name. The Name is matched first.
+        """
+        return self.get_process_parser(process_id_or_name).get_spec()
+
+class StaticFileSetBpmnParser(BaseBpmnParser):
+    """
+    The StaticFileSetBpmnParser class uses a static set of BPMN files as the source of it's workflow specifictions.
+    It will load sub workflows eagerly (on parse)
+
+    """
+
+    DYNAMICALLY_LOAD_SUB_PROCESSES = False
+
+
+    def __init__(self):
+        """
+        Constructor.
+        """
+        super(StaticFileSetBpmnParser, self).__init__()
+        self.process_parsers = {}
+        self.process_parsers_by_name = {}
 
     def get_process_parser(self, process_id_or_name):
         """
@@ -125,49 +189,14 @@ class StaticFileSetBpmnParser(object):
         :param svg: Optionally, provide the text data for the SVG of the BPMN file
         :param filename: Optionally, provide the source filename.
         """
-        xpath = xpath_eval(bpmn)
-
-        processes = xpath('.//bpmn:process')
-        for process in processes:
-            process_parser = self.PROCESS_PARSER_CLASS(self, process, svg, filename=filename, doc_xpath=xpath)
+        for process_parser in self.create_process_parsers_from_bpmn(bpmn, svg=svg, filename=filename):
             if process_parser.get_id() in self.process_parsers:
-                raise ValidationException('Duplicate process ID', node=process, filename=filename)
+                raise ValidationException('Duplicate process ID', node=process_parser.node, filename=filename)
             if process_parser.get_name() in self.process_parsers_by_name:
-                raise ValidationException('Duplicate process name', node=process, filename=filename)
+                raise ValidationException('Duplicate process name', node=process_parser.node, filename=filename)
             self.process_parsers[process_parser.get_id()] = process_parser
             self.process_parsers_by_name[process_parser.get_name()] = process_parser
 
-    def _parse_condition(self, outgoing_task, outgoing_task_node, sequence_flow_node, task_parser=None):
-        xpath = xpath_eval(sequence_flow_node)
-        condition_expression_node = conditionExpression = first(xpath('.//bpmn:conditionExpression'))
-        if conditionExpression is not None:
-            conditionExpression = conditionExpression.text
-        return self.parse_condition(conditionExpression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser)
-
-    def parse_condition(self, condition_expression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser):
-        """
-        Pre-parse the given condition expression, and return the parsed version. The returned version will be passed to the Script Engine
-        for evaluation.
-        """
-        return condition_expression
-
-    def _parse_documentation(self, node, task_parser=None, xpath=None):
-        xpath = xpath or xpath_eval(node)
-        documentation_node = first(xpath('.//bpmn:documentation'))
-        return self.parse_documentation(documentation_node, node, xpath, task_parser=task_parser)
-
-    def parse_documentation(self, documentation_node, node, node_xpath, task_parser=None):
-        """
-        Pre-parse the documentation node for the given node and return the text.
-        """
-        return None if documentation_node is None else documentation_node.text
-
-    def get_spec(self, process_id_or_name):
-        """
-        Parses the required subset of the BPMN files, in order to provide an instance of BpmnProcessSpec (i.e. WorkflowSpec)
-        for the given process ID or name. The Name is matched first.
-        """
-        return self.get_process_parser(process_id_or_name).get_spec()
-
 #For backwards compatibility:
-BpmnParser = StaticFileSetBpmnParser
+class BpmnParser(StaticFileSetBpmnParser):
+    pass
