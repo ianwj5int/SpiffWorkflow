@@ -6,20 +6,26 @@
       <bpmn2:lane id="Lane_1" name="Lane 1">
         <bpmn2:flowNodeRef>StartEvent_1</bpmn2:flowNodeRef>
         <bpmn2:flowNodeRef>EndEvent_1</bpmn2:flowNodeRef>
+        <bpmn2:flowNodeRef>CallActivity_1</bpmn2:flowNodeRef>
       </bpmn2:lane>
     </bpmn2:laneSet>
     <bpmn2:startEvent id="StartEvent_1">
       <bpmn2:outgoing>SequenceFlow_1</bpmn2:outgoing>
     </bpmn2:startEvent>
-    <bpmn2:sequenceFlow id="SequenceFlow_1" sourceRef="StartEvent_1" targetRef="EndEvent_1"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_1" sourceRef="StartEvent_1" targetRef="CallActivity_1"/>
     <bpmn2:endEvent id="EndEvent_1">
-      <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
+      <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
     </bpmn2:endEvent>
+    <bpmn2:callActivity id="CallActivity_1" name="Call Process 02-A" calledElement="file:/home/matth/work/git/workflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/level-02-A.bpmn#top-level">
+      <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
+    </bpmn2:callActivity>
+    <bpmn2:sequenceFlow id="SequenceFlow_2" name="Sequence Flow 2" sourceRef="CallActivity_1" targetRef="EndEvent_1"/>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1" name="Level-01">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="level-01">
       <bpmndi:BPMNShape id="BPMNShape_Lane_1" bpmnElement="Lane_1" isHorizontal="true">
-        <dc:Bounds height="231.0" width="600.0" x="80.0" y="180.0"/>
+        <dc:Bounds height="271.0" width="600.0" x="80.0" y="140.0"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_1" bpmnElement="StartEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="110.0" y="213.0"/>
@@ -27,10 +33,19 @@
       <bpmndi:BPMNShape id="BPMNShape_2" bpmnElement="EndEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="610.0" y="213.0"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="SequenceFlow_1" sourceElement="BPMNShape_1" targetElement="BPMNShape_2">
+      <bpmndi:BPMNShape id="BPMNShape_CallActivity_1" bpmnElement="CallActivity_1" isExpanded="true">
+        <dc:Bounds height="90.0" width="150.0" x="306.0" y="186.0"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="SequenceFlow_1" sourceElement="BPMNShape_1" targetElement="BPMNShape_CallActivity_1">
         <di:waypoint xsi:type="dc:Point" x="146.0" y="231.0"/>
-        <di:waypoint xsi:type="dc:Point" x="354.0" y="231.0"/>
-        <di:waypoint xsi:type="dc:Point" x="354.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="218.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="218.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="306.0" y="231.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_2" bpmnElement="SequenceFlow_2" sourceElement="BPMNShape_CallActivity_1" targetElement="BPMNShape_2">
+        <di:waypoint xsi:type="dc:Point" x="456.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="525.0" y="231.0"/>
+        <di:waypoint xsi:type="dc:Point" x="525.0" y="231.0"/>
         <di:waypoint xsi:type="dc:Point" x="610.0" y="231.0"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
