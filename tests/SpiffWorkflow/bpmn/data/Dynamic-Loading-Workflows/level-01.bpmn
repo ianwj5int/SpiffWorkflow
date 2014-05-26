@@ -18,12 +18,12 @@
     <bpmn2:endEvent id="EndEvent_1">
       <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
     </bpmn2:endEvent>
-    <bpmn2:callActivity id="CallActivity_2" name="Call Process 02 - B" calledElement="file:/home/matth/work/git/workflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/level-02-B.bpmn#level-02-B">
+    <bpmn2:callActivity id="CallActivity_2" name="Call Process 02 - B" calledElement="level-02-B:level-02-B">
       <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_3</bpmn2:outgoing>
     </bpmn2:callActivity>
     <bpmn2:sequenceFlow id="SequenceFlow_3" name="Done" sourceRef="CallActivity_2" targetRef="EndEvent_1"/>
-    <bpmn2:callActivity id="CallActivity_1" name="Call Process 02-A" calledElement="file:/home/matth/work/git/workflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/level-02-A.bpmn#level-02-A">
+    <bpmn2:callActivity id="CallActivity_1" name="Call Process 02-A" calledElement="level-02-A:level-02-A">
       <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
     </bpmn2:callActivity>
