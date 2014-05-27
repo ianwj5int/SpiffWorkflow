@@ -23,7 +23,7 @@ class CheckForDisconnectedBoundaryEvents(Filter):
                 raise ValidationException('Intermediate Catch Event has no incoming sequences. This might be a Boundary Event that has been disconnected.',
                 node=catch_event, filename=filename)
 
-class FixCallActivitiesForSignavio(Filter):
+class SignavioFixCallActivities(Filter):
 
     def filter(self, bpmn, filename):
         """

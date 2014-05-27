@@ -34,7 +34,7 @@ import os
 from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.parser.util import *
-from SpiffWorkflow.bpmn.parser.Filters import CheckForDisconnectedBoundaryEvents, FixCallActivitiesForSignavio
+from SpiffWorkflow.bpmn.parser.Filters import CheckForDisconnectedBoundaryEvents, SignavioFixCallActivities
 
 SIGNAVIO_NS='http://www.signavio.com'
 CONFIG_SECTION_NAME = "Packager Options"
@@ -236,7 +236,7 @@ class Packager(object):
         CheckForDisconnectedBoundaryEvents.filter(bpmn, filename)
 
     def _fix_call_activities_signavio(self, bpmn, filename):
-        FixCallActivitiesForSignavio().filter(bpmn, filename)
+        SignavioFixCallActivities().filter(bpmn, filename)
 
     def _call_editor_hook(self, hook, *args, **kwargs):
         if self.editor:
