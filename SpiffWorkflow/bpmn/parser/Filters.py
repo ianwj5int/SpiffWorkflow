@@ -25,6 +25,12 @@ class CheckForDisconnectedBoundaryEvents(Filter):
 
 class SignavioFixCallActivities(Filter):
 
+    def __init__(self, processes_ids_and_names):
+        """
+        processes_ids_and_names is a list of tuples - (idref, name)
+        """
+        self.processes_ids_and_names = processes_ids_and_names
+
     def filter(self, bpmn, filename):
         """
         Signavio produces slightly invalid BPMN for call activity nodes... It is supposed to put a reference to the id of the called process
@@ -43,13 +49,12 @@ class SignavioFixCallActivities(Filter):
                     raise ValidationException('No Signavio "Subprocess reference" specified.', node=node, filename=filename)
                 subprocess_reference = one(signavioMetaData).get('metaValue')
                 matches = []
-                for b in self.bpmn.values():
-                    for p in xpath_eval(b)(".//bpmn:process"):
-                        if p.get('name', p.get('id', None)) == subprocess_reference:
-                            matches.append(p)
+                for idref, name in self.processes_ids_and_names:
+                    if (name or idref) == subprocess_reference:
+                        matches.append(idref)
                 if not matches:
                     raise ValidationException("No matching process definition found for '%s'." % subprocess_reference, node=node, filename=filename)
                 if len(matches) != 1:
                     raise ValidationException("More than one matching process definition found for '%s'." % subprocess_reference, node=node, filename=filename)
 
-                node.set('calledElement', matches[0].get('id'))
+                node.set('calledElement', matches[0])

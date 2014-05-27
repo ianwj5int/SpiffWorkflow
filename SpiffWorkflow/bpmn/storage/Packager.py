@@ -233,10 +233,14 @@ class Packager(object):
         return bpmn
 
     def _check_for_disconnected_boundary_events_signavio(self, bpmn, filename):
-        CheckForDisconnectedBoundaryEvents.filter(bpmn, filename)
+        CheckForDisconnectedBoundaryEvents().filter(bpmn, filename)
 
     def _fix_call_activities_signavio(self, bpmn, filename):
-        SignavioFixCallActivities().filter(bpmn, filename)
+        processes_ids_and_names = []
+        for b in self.bpmn.values():
+            for p in xpath_eval(b)(".//bpmn:process"):
+                processes_ids_and_names.append((p.get('id'), p.get('name')))
+        SignavioFixCallActivities(processes_ids_and_names).filter(bpmn, filename)
 
     def _call_editor_hook(self, hook, *args, **kwargs):
         if self.editor:
