@@ -2,6 +2,7 @@ __author__ = 'matth'
 
 from SpiffWorkflow.bpmn.parser.util import *
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
+import os
 
 SIGNAVIO_NS='http://www.signavio.com'
 
@@ -58,3 +59,22 @@ class SignavioFixCallActivities(Filter):
                     raise ValidationException("More than one matching process definition found for '%s'." % subprocess_reference, node=node, filename=filename)
 
                 node.set('calledElement', matches[0])
+
+class EclipseConvertAbsolutePlatformImportsToRelativePaths(Filter):
+    def __init__(self, platform_roots):
+        """
+        platform_roots is a dictionary mapping from platform root folders to matching local disk paths
+        """
+        self.platform_roots = platform_roots
+
+    def filter(self, bpmn, filename):
+        filename = os.path.abspath(filename)
+        for bpmn_import in xpath_eval(bpmn)('.//bpmn:import'):
+            location = bpmn_import.get('location')
+            if location.startswith('platform:/'):
+                for root, local in self.platform_roots.iteritems():
+                    if location.startswith('platform:%s' % root):
+                        target = os.path.abspath(os.path.join(local, location[len('platform:%s' % root)+1:]))
+                        location = os.path.relpath(target, os.path.dirname(filename))
+                        bpmn_import.set('location', location)
+                        break
