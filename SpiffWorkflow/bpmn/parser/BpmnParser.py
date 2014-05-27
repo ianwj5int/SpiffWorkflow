@@ -145,6 +145,13 @@ class BaseBpmnParser(object):
 
         return ET.ElementTree(root)
 
+    def filter(self, bpmn, filename):
+        for f in self.get_filters():
+            f.filter(bpmn, filename)
+
+    def get_filters(self):
+        return []
+
 class StaticFileSetBpmnParser(BaseBpmnParser):
     """
     The StaticFileSetBpmnParser class uses a static set of BPMN files as the source of it's workflow specifictions.
@@ -239,8 +246,6 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         self.process_parsers_by_url_and_id = {}
 
     def resolve_process_parser(self, location, idref):
-        if location.startswith('file:/'):
-            location = location[len('file:'):]
         filename = os.path.abspath(location)
 
         if (filename, idref) in self.process_parsers_by_url_and_id:
@@ -249,6 +254,7 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         f = open(filename, 'r')
         try:
             bpmn = self.parse_file(f)
+            self.filter(bpmn, filename)
             for process_parser in self.create_process_parsers_from_bpmn(bpmn, svg=None, filename=filename):
                 self.process_parsers_by_url_and_id[(filename, process_parser.get_id())] = process_parser
         finally:

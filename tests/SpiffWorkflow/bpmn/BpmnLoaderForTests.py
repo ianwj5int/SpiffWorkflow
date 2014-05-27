@@ -2,14 +2,16 @@
 from __future__ import print_function, absolute_import, division
 
 from __future__ import division
+from SpiffWorkflow.bpmn.parser.Filters import EclipseConvertAbsolutePlatformImportsToRelativePaths
 from SpiffWorkflow.bpmn.specs.CallActivity import CallActivity
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ExclusiveGateway import ExclusiveGateway
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
-from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
+from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser, DynamicFileBasedBpmnParser
 from SpiffWorkflow.bpmn.parser.task_parsers import UserTaskParser, EndEventParser, CallActivityParser
 from SpiffWorkflow.bpmn.parser.util import full_tag
 from SpiffWorkflow.operators import Assign
+import os
 
 __author__ = 'matth'
 
@@ -56,5 +58,24 @@ class TestBpmnParser(BpmnParser):
             return cond
         return "choice == '%s'" % sequence_flow_node.get('name', None)
 
-class DynamicallyLoadedSubWorflowTestBpmnParser(TestBpmnParser):
-    DYNAMICALLY_LOAD_SUB_PROCESSES = True
+class DynamicallyLoadedSubWorflowTestBpmnParser(DynamicFileBasedBpmnParser):
+
+    OVERRIDE_PARSER_CLASSES = {
+        full_tag('userTask')            : (UserTaskParser, TestUserTask),
+        full_tag('endEvent')            : (EndEventParser, TestEndEvent),
+        full_tag('callActivity')        : (CallActivityParser, TestCallActivity),
+        }
+
+    DYNAMICALLY_LOAD_SUB_PROCESSES = False
+
+    def parse_condition(self, condition_expression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser):
+        cond = super(TestBpmnParser, self).parse_condition(condition_expression,outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser)
+        if cond is not None:
+            return cond
+        return "choice == '%s'" % sequence_flow_node.get('name', None)
+
+    def get_filters(self):
+        return super(DynamicallyLoadedSubWorflowTestBpmnParser, self).get_filters() + [
+            EclipseConvertAbsolutePlatformImportsToRelativePaths({
+                'platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn' : os.path.abspath(os.path.dirname(__file__)),
+            })]

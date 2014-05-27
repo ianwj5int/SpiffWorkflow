@@ -19,6 +19,7 @@ from __future__ import division
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.specs.BpmnProcessSpec import BpmnProcessSpec
 from SpiffWorkflow.bpmn.parser.util import *
+import os
 
 class ProcessParser(object):
     """
@@ -90,8 +91,14 @@ class ProcessParser(object):
             namespace_prefix, idref = qname.split(':', 1)
             namespace = node.ns_map.get(namespace_prefix)
             assert namespace
-            return self.namespace_to_location_lookup[namespace], idref
-        return self.filename, qname
+            location, idref = self.namespace_to_location_lookup[namespace], idref
+        else:
+            location, idref = self.filename, qname
+
+        if not os.path.isabs(location):
+            location = os.path.join(os.path.dirname(self.filename), location)
+
+        return location, idref
 
     def _init_lane_lookup(self):
         self.id_to_lane_lookup = {}

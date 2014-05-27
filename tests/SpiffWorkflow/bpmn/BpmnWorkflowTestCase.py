@@ -9,7 +9,7 @@ from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.storage.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.storage.CompactWorkflowSerializer import CompactWorkflowSerializer
 from tests.SpiffWorkflow.bpmn.PackagerForTests import PackagerForTests
-from SpiffWorkflow.bpmn.parser.BpmnParser import DynamicFileBasedBpmnParser
+from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import DynamicallyLoadedSubWorflowTestBpmnParser
 
 __author__ = 'matth'
 
@@ -108,4 +108,4 @@ class DynamicallyLoadedSubWorkflowTestCase(BpmnWorkflowTestCase):
     def load_workflow_spec(self, filename, process_id):
         f = os.path.join(os.path.dirname(__file__), 'data', filename)
 
-        return DynamicFileBasedBpmnParser().get_spec(f, process_id)
+        return DynamicallyLoadedSubWorflowTestBpmnParser().get_spec(f, process_id)
