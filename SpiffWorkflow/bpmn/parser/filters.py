@@ -71,10 +71,14 @@ class EclipseConvertAbsolutePlatformImportsToRelativePaths(Filter):
         filename = os.path.abspath(filename)
         for bpmn_import in xpath_eval(bpmn)('.//bpmn:import'):
             location = bpmn_import.get('location')
-            if location.startswith('platform:/'):
-                for root, local in self.platform_roots.iteritems():
-                    if location.startswith(root):
-                        target = os.path.abspath(os.path.join(local, location[len(root)+1:]))
-                        location = os.path.relpath(target, os.path.dirname(filename))
-                        bpmn_import.set('location', location)
-                        break
+            converted, location = self._convert_location(filename, location)
+            bpmn_import.set('location', location)
+
+    def _convert_location(self, filename, location):
+        if location.startswith('platform:/'):
+            for root, local in self.platform_roots.iteritems():
+                if location.startswith(root):
+                    target = os.path.abspath(os.path.join(local, location[len(root)+1:]))
+                    location = os.path.relpath(target, os.path.dirname(filename))
+                    return True, location
+        return False, location
