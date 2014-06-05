@@ -77,3 +77,8 @@ class EclipseConvertAbsolutePlatformImportsToRelativePathsTestCase(unittest.Test
         )
         self.assertTrue(converted, 'Must be converted')
         self.assertEqual('level-02-B.bpmn', new_location)
+
+def suite():
+    return unittest.TestLoader().loadTestsFromTestCase(EclipseConvertAbsolutePlatformImportsToRelativePathsTestCase)
+if __name__ == '__main__':
+    unittest.TextTestRunner(verbosity = 2).run(suite())

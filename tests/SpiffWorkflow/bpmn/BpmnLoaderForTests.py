@@ -50,8 +50,6 @@ class TestBpmnParser(BpmnParser):
         full_tag('callActivity')        : (CallActivityParser, TestCallActivity),
         }
 
-    DYNAMICALLY_LOAD_SUB_PROCESSES = False
-
     def parse_condition(self, condition_expression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser):
         cond = super(TestBpmnParser, self).parse_condition(condition_expression,outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser)
         if cond is not None:
@@ -65,8 +63,6 @@ class DynamicallyLoadedSubWorflowTestBpmnParser(DynamicFileBasedBpmnParser):
         full_tag('endEvent')            : (EndEventParser, TestEndEvent),
         full_tag('callActivity')        : (CallActivityParser, TestCallActivity),
         }
-
-    DYNAMICALLY_LOAD_SUB_PROCESSES = False
 
     def parse_condition(self, condition_expression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser):
         cond = super(TestBpmnParser, self).parse_condition(condition_expression,outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser)
