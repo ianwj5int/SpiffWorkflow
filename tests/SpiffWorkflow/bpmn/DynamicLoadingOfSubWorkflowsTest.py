@@ -5,15 +5,13 @@ from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.BpmnWorkflow import BpmnWorkflow
 from tests.SpiffWorkflow.bpmn.BpmnWorkflowTestCase import DynamicallyLoadedSubWorkflowTestCase
 
-__author__ = 'neilc'
-
 
 class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
     def setUp(self):
         self.spec = self.load_spec()
 
     def load_spec(self):
-        return self.load_workflow_spec('Dynamic-Loading-Workflows/level-01.bpmn', 'level-01')
+        return self.load_workflow_spec('Dynamic-Loading-Workflows/base-package/workflow-source/process-01/level-01.bpmn', 'level-01')
 
     def testRunThroughHappy(self):
 
