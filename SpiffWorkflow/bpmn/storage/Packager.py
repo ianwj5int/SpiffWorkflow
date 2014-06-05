@@ -34,7 +34,7 @@ import os
 from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.parser.util import *
-from SpiffWorkflow.bpmn.parser.Filters import CheckForDisconnectedBoundaryEvents, SignavioFixCallActivities
+from SpiffWorkflow.bpmn.parser.filters import CheckForDisconnectedBoundaryEvents, SignavioFixCallActivities
 
 SIGNAVIO_NS='http://www.signavio.com'
 CONFIG_SECTION_NAME = "Packager Options"

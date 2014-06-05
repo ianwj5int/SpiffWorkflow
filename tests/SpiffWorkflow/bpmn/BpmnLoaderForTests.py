@@ -2,7 +2,7 @@
 from __future__ import print_function, absolute_import, division
 
 from __future__ import division
-from SpiffWorkflow.bpmn.parser.Filters import EclipseConvertAbsolutePlatformImportsToRelativePaths
+from SpiffWorkflow.bpmn.parser.filters import EclipseConvertAbsolutePlatformImportsToRelativePaths
 from SpiffWorkflow.bpmn.specs.CallActivity import CallActivity
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ExclusiveGateway import ExclusiveGateway
