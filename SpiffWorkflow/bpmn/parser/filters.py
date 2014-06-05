@@ -75,7 +75,7 @@ class EclipseConvertAbsolutePlatformImportsToRelativePaths(Filter):
             bpmn_import.set('location', location)
 
     def _convert_location(self, filename, location):
-        if location.startswith('platform:/'):
+        if location.startswith('platform:/resource/'):
             for root, local in self.platform_roots.iteritems():
                 if location.startswith(root):
                     target = os.path.abspath(os.path.join(local, location[len(root)+1:]))
