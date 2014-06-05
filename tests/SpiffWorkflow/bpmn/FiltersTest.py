@@ -21,3 +21,35 @@ class EclipseConvertAbsolutePlatformImportsToRelativePathsTestCase(unittest.Test
         )
         self.assertTrue(converted, 'Must be converted')
         self.assertEqual('level-02-B.bpmn', new_location)
+
+    def test_link_to_parent_folder(self):
+        converted, new_location = self.filter._convert_location(
+            os.path.join(self.bpmn_test_data_dir, 'Dynamic-Loading-Workflows', 'level-01.bpmn'),
+            'platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/level-02-B.bpmn'
+        )
+        self.assertTrue(converted, 'Must be converted')
+        self.assertEqual('../level-02-B.bpmn', new_location)
+
+    def test_link_to_grant_parent_folder(self):
+        converted, new_location = self.filter._convert_location(
+            os.path.join(self.bpmn_test_data_dir, 'Dynamic-Loading-Workflows', 'level-01.bpmn'),
+            'platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/level-02-B.bpmn'
+        )
+        self.assertTrue(converted, 'Must be converted')
+        self.assertEqual('../../level-02-B.bpmn', new_location)
+
+    def test_link_from_parent_folder(self):
+        converted, new_location = self.filter._convert_location(
+            os.path.join(self.bpmn_test_data_dir, 'level-01.bpmn'),
+            'platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/level-02-B.bpmn'
+        )
+        self.assertTrue(converted, 'Must be converted')
+        self.assertEqual('Dynamic-Loading-Workflows/level-02-B.bpmn', new_location)
+
+    def test_link_from_grant_parent_folder(self):
+        converted, new_location = self.filter._convert_location(
+            os.path.abspath(os.path.join(self.bpmn_test_data_dir, '..', 'level-01.bpmn')),
+            'platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/level-02-B.bpmn'
+        )
+        self.assertTrue(converted, 'Must be converted')
+        self.assertEqual('data/Dynamic-Loading-Workflows/level-02-B.bpmn', new_location)
