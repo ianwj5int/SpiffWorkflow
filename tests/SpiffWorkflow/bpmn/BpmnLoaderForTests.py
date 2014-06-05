@@ -77,5 +77,5 @@ class DynamicallyLoadedSubWorflowTestBpmnParser(DynamicFileBasedBpmnParser):
     def get_filters(self):
         return super(DynamicallyLoadedSubWorflowTestBpmnParser, self).get_filters() + [
             EclipseConvertAbsolutePlatformImportsToRelativePaths({
-                'platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn' : os.path.abspath(os.path.dirname(__file__)),
+                'platform:/resource/SpiffWorkflow' : os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))),
             })]
