@@ -60,6 +60,31 @@ class SignavioFixCallActivities(Filter):
 
                 node.set('calledElement', matches[0])
 
+class EclipseConvertAnchorTypeCalledElementIdsToQNames(Filter):
+    """
+    This filter should be run before the EclipseConvertAbsolutePlatformImportsToRelativePaths one
+    """
+
+    def __init__(self):
+        pass
+
+    def filter(self, bpmn, filename):
+        location_to_namespace_map = {}
+
+        for bpmn_import in xpath_eval(bpmn)('.//bpmn:import[@importType="http://www.omg.org/spec/BPMN/20100524/MODEL"]'):
+            location_to_namespace_map[bpmn_import.get('location')] = bpmn_import.get('namespace')
+
+        for node in xpath_eval(bpmn)(".//bpmn:callActivity"):
+            calledElement = node.get('calledElement', None)
+            assert calledElement
+            for location, namespace in location_to_namespace_map.iteritems():
+                if calledElement.startswith(location+'#'):
+                    rev_map = dict((value, key) for key, value in node.ns_map.iteritems())
+                    assert namespace in rev_map
+                    calledElement = "%s:%s" % (rev_map[namespace], calledElement[len(location)+1:])
+                    node.set('calledElement', calledElement)
+                    break
+
 class EclipseConvertAbsolutePlatformImportsToRelativePaths(Filter):
     def __init__(self, platform_roots):
         """

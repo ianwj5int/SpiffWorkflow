@@ -2,7 +2,7 @@
 from __future__ import print_function, absolute_import, division
 
 from __future__ import division
-from SpiffWorkflow.bpmn.parser.filters import EclipseConvertAbsolutePlatformImportsToRelativePaths
+from SpiffWorkflow.bpmn.parser.filters import EclipseConvertAbsolutePlatformImportsToRelativePaths, EclipseConvertAnchorTypeCalledElementIdsToQNames
 from SpiffWorkflow.bpmn.specs.CallActivity import CallActivity
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ExclusiveGateway import ExclusiveGateway
@@ -76,6 +76,7 @@ class DynamicallyLoadedSubWorflowTestBpmnParser(DynamicFileBasedBpmnParser):
 
     def get_filters(self):
         return super(DynamicallyLoadedSubWorflowTestBpmnParser, self).get_filters() + [
+            EclipseConvertAnchorTypeCalledElementIdsToQNames(),
             EclipseConvertAbsolutePlatformImportsToRelativePaths({
                 'platform:/resource/SpiffWorkflow' : os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))),
             })]
