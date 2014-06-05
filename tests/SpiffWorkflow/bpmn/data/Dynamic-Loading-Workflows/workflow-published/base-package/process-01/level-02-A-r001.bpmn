@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:level-03-A="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/base-package/process-01/level-03-A" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/base-package/process-01/level-02-A">
-  <bpmn2:import importType="http://www.omg.org/spec/BPMN/20100524/MODEL" location="platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/base-package/workflow-source/process-01/level-03-A.bpmn" namespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/level-03-A"/>
+  <bpmn2:import importType="http://www.omg.org/spec/BPMN/20100524/MODEL" location="platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/base-package/process-01/level-03-A.bpmn" namespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/level-03-A"/>
   <bpmn2:process id="level-02-A" name="Level-02-A" processType="Private">
     <bpmn2:laneSet id="LaneSet_4">
       <bpmn2:lane id="Lane_1" name="User 1">
