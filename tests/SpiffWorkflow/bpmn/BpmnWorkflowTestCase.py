@@ -88,19 +88,22 @@ class BpmnWorkflowTestCase(unittest.TestCase):
         if state != after_state:
             logging.debug("Before save:\n%s", before_dump)
             logging.debug("After save:\n%s", after_dump)
-        self.assertEquals(state, after_state)
+        self.assertEquals(state[0], after_state[0])
 
     def restore(self, state):
-        self.workflow = TestCompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec)
+        saved_data = None
+        if isinstance(state, tuple):
+            state, saved_data = state
+        self.workflow = TestCompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec, saved_data=saved_data)
 
     def get_read_only_workflow(self):
         state = self._get_workflow_state()
-        return TestCompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec, read_only=True)
+        return TestCompactWorkflowSerializer().deserialize_workflow(state[0], workflow_spec=self.spec, read_only=True, saved_data=state[1])
 
     def _get_workflow_state(self):
         self.workflow.do_engine_steps()
         self.workflow.refresh_waiting_tasks()
-        return TestCompactWorkflowSerializer().serialize_workflow(self.workflow, include_spec=False)
+        return TestCompactWorkflowSerializer().serialize_workflow(self.workflow, include_spec=False), self.workflow.data
 
 class DynamicallyLoadedSubWorkflowTestCase(BpmnWorkflowTestCase):
 
