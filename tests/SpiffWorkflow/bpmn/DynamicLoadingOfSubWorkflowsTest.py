@@ -90,6 +90,29 @@ class DynamicLoadingOfSubWorkflowsTest(DynamicallyLoadedSubWorkflowTestCase):
         self.save_restore()
         self.assertEquals(0, len(self.workflow.get_tasks(Task.READY | Task.WAITING)))
 
+    def testRunThroughUserLevelEmea(self):
+        self.setup_spec_user_content_level()
+        self.workflow = TestWorkflow(self.spec)
+        self.workflow.data['region'] = 'EMEA'
+        self.do_next_named_step('User Task Main User')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+        self.do_next_named_step('User Task 02-A')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.READY)))
+        self.do_next_named_step('User Task 03-A')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.READY)))
+        self.do_next_named_step('User Task 02-B-Sub-EMEA')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+        self.do_next_named_step('User Task 02-B')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+        self.assertEquals(0, len(self.workflow.get_tasks(Task.READY | Task.WAITING)))
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(DynamicLoadingOfSubWorkflowsTest)
 if __name__ == '__main__':

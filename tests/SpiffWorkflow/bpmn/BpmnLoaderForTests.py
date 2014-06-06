@@ -109,7 +109,10 @@ class GlobalTaskResolverForTests(GlobalTaskResolver):
 
         return self._parsed_processes[name]
 
-    def get_task_spec(self, global_task_parser):
+    def get_task_spec(self, global_task_parser, my_call_activity_task):
         collection_name = os.path.basename(os.path.dirname(global_task_parser.filename))
         bpmn_name, process_id = global_task_parser.get_name().split(':')
+        region = my_call_activity_task.data.get('region') if my_call_activity_task else None
+        if region:
+            bpmn_name = '%s-%s' % (bpmn_name, region)
         return self._get_process_spec(collection_name, bpmn_name, process_id)

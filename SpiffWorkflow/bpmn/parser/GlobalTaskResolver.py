@@ -27,7 +27,7 @@ class GlobalTaskParser(object):
 
 class GlobalTaskResolver(object):
 
-    def get_task_spec(self, global_task_parser):
+    def get_task_spec(self, global_task_parser, my_call_activity_task):
         """
         Return the task spec for the specified global task.
 
