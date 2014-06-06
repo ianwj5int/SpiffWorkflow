@@ -2,9 +2,8 @@ import unittest
 import datetime
 import time
 from SpiffWorkflow.Task import Task
-from SpiffWorkflow.bpmn.BpmnWorkflow import BpmnWorkflow
 from tests.SpiffWorkflow.bpmn.BpmnWorkflowTestCase import DynamicallyLoadedSubWorkflowTestCase
-from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import GlobalTaskResolverForTests
+from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import GlobalTaskResolverForTests, TestWorkflow
 
 
 
@@ -36,7 +35,7 @@ class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
 
     def testRunThroughBaseLevel(self):
         self.setup_spec_base_level()
-        self.workflow = BpmnWorkflow(self.spec)
+        self.workflow = TestWorkflow(self.spec)
         self.do_next_named_step('User Task 02-A')
         self.workflow.do_engine_steps()
         self.save_restore()
@@ -52,7 +51,7 @@ class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
 
     def testRunThroughSubLevel(self):
         self.setup_spec_sub_level()
-        self.workflow = BpmnWorkflow(self.spec)
+        self.workflow = TestWorkflow(self.spec)
         self.do_next_named_step('User Task 02-A')
         self.workflow.do_engine_steps()
         self.save_restore()
@@ -71,7 +70,7 @@ class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
 
     def testRunThroughUserLevel(self):
         self.setup_spec_user_content_level()
-        self.workflow = BpmnWorkflow(self.spec)
+        self.workflow = TestWorkflow(self.spec)
         self.do_next_named_step('User Task Main User')
         self.workflow.do_engine_steps()
         self.save_restore()

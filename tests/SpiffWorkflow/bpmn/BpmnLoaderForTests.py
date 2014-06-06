@@ -12,6 +12,7 @@ from SpiffWorkflow.bpmn.parser.task_parsers import UserTaskParser, EndEventParse
 from SpiffWorkflow.bpmn.parser.util import full_tag
 from SpiffWorkflow.bpmn.parser.GlobalTaskResolver import GlobalTaskResolver
 from SpiffWorkflow.operators import Assign
+from SpiffWorkflow.bpmn.BpmnWorkflow import BpmnWorkflow
 import os
 
 __author__ = 'matth'
@@ -57,6 +58,10 @@ class TestBpmnParser(BpmnParser):
             return cond
         return "choice == '%s'" % sequence_flow_node.get('name', None)
 
+class TestWorkflow(BpmnWorkflow):
+    def __init__(self, workflow_spec, name=None, script_engine=None, read_only=False, **kwargs):
+        super(TestWorkflow, self).__init__(workflow_spec, name=name, script_engine=script_engine, read_only=read_only, **kwargs)
+
 class DynamicallyLoadedSubWorkflowTestBpmnParser(DynamicFileBasedBpmnParser):
 
     OVERRIDE_PARSER_CLASSES = {
@@ -64,6 +69,8 @@ class DynamicallyLoadedSubWorkflowTestBpmnParser(DynamicFileBasedBpmnParser):
         full_tag('endEvent')            : (EndEventParser, TestEndEvent),
         full_tag('callActivity')        : (CallActivityParser, TestCallActivity),
         }
+
+    WORKFLOW_CLASS = TestWorkflow
 
     def parse_condition(self, condition_expression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser):
         cond = super(TestBpmnParser, self).parse_condition(condition_expression,outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser)
