@@ -7,7 +7,7 @@ from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import GlobalTaskResolverForTes
 
 
 
-class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
+class DynamicLoadingOfSubWorkflowsTest(DynamicallyLoadedSubWorkflowTestCase):
 
     def setup_spec_base_level(self):
         self.resolver = GlobalTaskResolverForTests({
@@ -91,6 +91,6 @@ class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
         self.assertEquals(0, len(self.workflow.get_tasks(Task.READY | Task.WAITING)))
 
 def suite():
-    return unittest.TestLoader().loadTestsFromTestCase(NestedProcessesTest)
+    return unittest.TestLoader().loadTestsFromTestCase(DynamicLoadingOfSubWorkflowsTest)
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity = 2).run(suite())
