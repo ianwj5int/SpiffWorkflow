@@ -38,3 +38,8 @@ class GlobalTaskResolver(object):
         """
         Return an absolute identifier for the BPMN file that can be used to save the state of a running workflow instance
         """
+
+    def get_task_spec_from_absolute_id(self, absolute_global_task_id):
+        """
+        Use a previously provided absolute id to locate a global task spec
+        """

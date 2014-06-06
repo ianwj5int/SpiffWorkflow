@@ -255,7 +255,7 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         self.global_task_parsers_by_url_and_id = {}
         self.global_task_resolver = global_task_resolver
 
-    def resolve_called_activity_spec(self, location, idref, my_call_activity_task):
+    def resolve_called_activity_spec(self, location, idref, my_call_activity_task=None, absolute_global_task_id=None):
         filename = os.path.abspath(location)
 
         if (filename, idref) in self.process_parsers_by_url_and_id:

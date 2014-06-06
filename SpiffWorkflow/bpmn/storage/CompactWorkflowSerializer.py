@@ -41,10 +41,11 @@ class _RouteNode(object):
     """
     Private helper class
     """
-    def __init__(self, task_spec, outgoing_route_node=None):
+    def __init__(self, task_spec, outgoing_route_node=None, sub_workflow_spec=None):
         self.task_spec = task_spec
         self.outgoing = [outgoing_route_node] if outgoing_route_node else []
         self.state = None
+        self.sub_workflow_spec = sub_workflow_spec
 
     def get_outgoing_by_spec(self, task_spec):
         m = [r for r in self.outgoing if r.task_spec == task_spec]
@@ -93,19 +94,25 @@ class _BpmnProcessSpecState(object):
         for p in workflow_parents:
             if version<2:
                 task_name = p
+                absolute_global_task_id = None
             else:
                 task_name, absolute_global_task_id = p
             route = self._breadth_first_task_search(task_name, route)
             if route is None:
                 raise UnrecoverableWorkflowChange('No path found for route \'%s\'' % transition)
-            route_to_parent_complete = route + [route[-1].outputs[0]]
-            route = route + [route[-1]._get_spec().start]
+            sub_workflow_spec = route[-1]._get_spec(absolute_global_task_id)
+            route[-1] = (route[-1], sub_workflow_spec)
+            route_to_parent_complete = route + [route[-1][0].outputs[0]]
+            route = route + [sub_workflow_spec.start]
         route = self._breadth_first_transition_search(transition, route, taken_routes=taken_routes)
         if route is None:
             raise UnrecoverableWorkflowChange('No path found for route \'%s\'' % transition)
         outgoing_route_node = None
         for spec in reversed(route):
-            outgoing_route_node = _RouteNode(spec, outgoing_route_node)
+            sub_workflow_spec = None
+            if isinstance(spec, tuple):
+                spec, sub_workflow_spec = spec
+            outgoing_route_node = _RouteNode(spec, outgoing_route_node, sub_workflow_spec)
             outgoing_route_node.state = state
         return outgoing_route_node, route_to_parent_complete
 
@@ -154,7 +161,7 @@ class _BpmnProcessSpecState(object):
             leaf_tasks.append(task)
         else:
             if not task._is_finished():
-                if issubclass(task.task_spec.__class__, SubWorkflow) and task.task_spec._get_spec().start in [o.task_spec for o in route_node.outgoing]:
+                if route_node.sub_workflow_spec and route_node.sub_workflow_spec.start in [o.task_spec for o in route_node.outgoing]:
                     self._go_in_to_subworkflow(task, [n.task_spec for n in route_node.outgoing])
                 else:
                     self._complete_task_silent(task, [n.task_spec for n in route_node.outgoing])

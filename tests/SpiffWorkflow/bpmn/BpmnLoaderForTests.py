@@ -109,6 +109,7 @@ class GlobalTaskResolverForTests(GlobalTaskResolver):
     def __init__(self, processes):
         self.processes = processes
         self._parsed_processes = {}
+        self._parsed_processes_by_filename_and_process = {}
 
     def get_main_process_by_name(self, name):
         return self._get_process_spec(name, 'main', 'main')
@@ -121,7 +122,10 @@ class GlobalTaskResolverForTests(GlobalTaskResolver):
             while not os.path.exists(f):
                 f = os.path.join(os.path.dirname(__file__), 'data', self.processes[collection_name][-i], '%s.bpmn' % bpmn_name)
                 i+= 1
-            self._parsed_processes[name] = DynamicallyLoadedSubWorkflowTestBpmnParser(self).get_spec(f, process_id)
+            f = os.path.abspath(f)
+            if f not in self._parsed_processes_by_filename_and_process:
+                self._parsed_processes_by_filename_and_process[(f,process_id)] = DynamicallyLoadedSubWorkflowTestBpmnParser(self).get_spec(f, process_id)
+            self._parsed_processes[name] = self._parsed_processes_by_filename_and_process[(f,process_id)]
 
         return self._parsed_processes[name]
 
@@ -135,3 +139,10 @@ class GlobalTaskResolverForTests(GlobalTaskResolver):
 
     def get_absolute_global_file_id(self, filename):
         return os.path.relpath(os.path.abspath(filename), os.path.join(os.path.dirname(__file__), 'data'))
+
+    def get_task_spec_from_absolute_id(self, absolute_global_task_id):
+        f, process_id = absolute_global_task_id.rsplit(':',1)
+        f = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data', f))
+        if f not in self._parsed_processes_by_filename_and_process:
+            self._parsed_processes_by_filename_and_process[(f,process_id)] = DynamicallyLoadedSubWorkflowTestBpmnParser(self).get_spec(f, process_id)
+        return self._parsed_processes_by_filename_and_process[(f,process_id)]

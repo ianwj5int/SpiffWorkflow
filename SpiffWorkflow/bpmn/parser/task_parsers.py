@@ -120,12 +120,12 @@ class CallActivityParser(TaskParser):
         """
         return self.parser.get_process_parser(self.called_element)
 
-    def resolve_called_activity_spec(self, my_call_activity_task):
+    def resolve_called_activity_spec(self, my_call_activity_task=None, absolute_global_task_id=None):
         """
         This is used for dynamic resolution
         """
         location, idref = self.process_parser.get_location_and_id(self.node, self.called_element)
-        return self.parser.resolve_called_activity_spec(location, idref, my_call_activity_task)
+        return self.parser.resolve_called_activity_spec(location, idref, my_call_activity_task=my_call_activity_task, absolute_global_task_id=absolute_global_task_id)
 
 
 class ScriptTaskParser(TaskParser):
