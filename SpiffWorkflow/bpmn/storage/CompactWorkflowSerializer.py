@@ -86,11 +86,15 @@ class _BpmnProcessSpecState(object):
         self.spec = spec
         self.route = None
 
-    def get_path_to_transition(self, transition, state, workflow_parents, taken_routes=None):
+    def get_path_to_transition(self, transition, state, workflow_parents, version, taken_routes=None):
         #find a route passing through each task:
         route = [self.spec.start]
         route_to_parent_complete = None
-        for task_name in workflow_parents:
+        for p in workflow_parents:
+            if version<2:
+                task_name = p
+            else:
+                task_name, absolute_global_task_id = p
             route = self._breadth_first_task_search(task_name, route)
             if route is None:
                 raise UnrecoverableWorkflowChange('No path found for route \'%s\'' % transition)
@@ -317,13 +321,23 @@ class CompactWorkflowSerializer(Serializer):
             w = task.workflow
             workflow_parents = []
             while w.outer_workflow and w.outer_workflow != w:
-                workflow_parents.append(w.name)
+                if version<2:
+                    workflow_parents.append(w.name)
+                else:
+                    workflow_parents.append([w.name, w.spec.absolute_global_task_id])
                 w = w.outer_workflow
             state = ("W" if task.state == Task.WAITING else "R")
             states.append([transition, list(reversed(workflow_parents)), state])
 
         compacted_states = []
-        for state in sorted(states, key=lambda s:",".join([s[0], s[2], (':'.join(s[1]))])):
+        if version<2:
+            def _workflow_parents_list_to_comparable(l):
+                return ':'.join(l)
+        else:
+            def _workflow_parents_list_to_comparable(l):
+                return tuple(tuple(p) for p in l)
+
+        for state in sorted(states, key=lambda s:(s[0], s[2], _workflow_parents_list_to_comparable(s[1]))):
             if state[-1] == 'R':
                 state.pop()
             if state[-1] == []:
@@ -351,7 +365,7 @@ class CompactWorkflowSerializer(Serializer):
             workflow_parents = state[1] if len(state)>1 else []
             state = (Task.WAITING if len(state)>2 and state[2] == 'W' else Task.READY)
 
-            route, route_to_parent_complete = s.get_path_to_transition(transition, state, workflow_parents)
+            route, route_to_parent_complete = s.get_path_to_transition(transition, state, workflow_parents, version)
             routes.append((route, route_to_parent_complete, transition, state, workflow_parents))
 
         retry=True
@@ -372,7 +386,7 @@ class CompactWorkflowSerializer(Serializer):
                     if route.contains(other_route) or (route_to_parent_complete and route.contains(route_to_parent_complete)):
                         taken_routes = [r for r in routes if r[0]!=route]
                         taken_routes = [r for r in [r[0] for r in taken_routes] + [r[1] for r in taken_routes] if r]
-                        route, route_to_parent_complete = s.get_path_to_transition(transition, state, workflow_parents, taken_routes=taken_routes)
+                        route, route_to_parent_complete = s.get_path_to_transition(transition, state, workflow_parents, version, taken_routes=taken_routes)
                         for r in taken_routes:
                             assert not route.contains(r)
                         routes[i] = route, route_to_parent_complete, transition, state, workflow_parents
