@@ -132,3 +132,6 @@ class GlobalTaskResolverForTests(GlobalTaskResolver):
         if region:
             bpmn_name = '%s-%s' % (bpmn_name, region)
         return self._get_process_spec(collection_name, bpmn_name, process_id)
+
+    def get_absolute_global_file_id(self, filename):
+        return os.path.relpath(os.path.abspath(filename), os.path.join(os.path.dirname(__file__), 'data'))

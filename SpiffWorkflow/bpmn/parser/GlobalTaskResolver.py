@@ -33,3 +33,8 @@ class GlobalTaskResolver(object):
 
         Currently, only subworkflow's are supported - i.e. return an instance of BpmnProcessSpec
         """
+
+    def get_absolute_global_file_id(self, filename):
+        """
+        Return an absolute identifier for the BPMN file that can be used to save the state of a running workflow instance
+        """

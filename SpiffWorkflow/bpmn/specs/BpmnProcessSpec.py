@@ -61,11 +61,12 @@ class BpmnProcessSpec(WorkflowSpec):
     standard Spiff WorkflowSpec class with a few extra methods and attributes.
     """
 
-    def __init__(self, name=None, description=None, filename=None, svg=None):
+    def __init__(self, name=None, description=None, filename=None, svg=None, absolute_global_task_id=None):
         """
         Constructor.
 
         :param svg: This provides the SVG representation of the workflow as an LXML node. (optional)
+        :param absolute_global_task_id: This is required when the dynamic resolution of process specifications is required.
         """
         super(BpmnProcessSpec, self).__init__(name=name, filename=filename)
         self.end = _EndJoin(self, '%s.EndJoin' % (self.name))
@@ -73,6 +74,7 @@ class BpmnProcessSpec(WorkflowSpec):
         end.follow(self.end)
         self.svg = svg
         self.description = description
+        self.absolute_global_task_id = absolute_global_task_id
 
     def get_all_lanes(self):
         """

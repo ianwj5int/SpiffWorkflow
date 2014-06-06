@@ -84,7 +84,7 @@ class BaseBpmnParser(object):
             return self.PARSER_CLASSES[tag]
         return None, None
 
-    def create_process_parsers_from_bpmn(self, bpmn, svg=None, filename=None):
+    def create_process_parsers_from_bpmn(self, bpmn, svg=None, filename=None, absolute_global_file_id=None):
         """
         Create process parser objects based on bpmn content.
 
@@ -95,7 +95,8 @@ class BaseBpmnParser(object):
 
         processes = xpath('.//bpmn:process')
         for process in processes:
-            process_parser = self.PROCESS_PARSER_CLASS(self, process, svg, filename=filename, doc_xpath=xpath)
+            process_parser = self.PROCESS_PARSER_CLASS(self, process, svg, filename=filename, doc_xpath=xpath,
+                                                       absolute_global_task_id=absolute_global_file_id+":"+process.get('id') if absolute_global_file_id else None)
             yield process_parser
 
     def create_global_task_parsers_from_bpmn(self, bpmn, filename=None):
@@ -267,7 +268,8 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         try:
             bpmn = self.parse_file(f)
             self.filter(bpmn, filename)
-            for process_parser in self.create_process_parsers_from_bpmn(bpmn, svg=None, filename=filename):
+            absolute_global_file_id = self.global_task_resolver.get_absolute_global_file_id(filename) if self.global_task_resolver else None
+            for process_parser in self.create_process_parsers_from_bpmn(bpmn, svg=None, filename=filename, absolute_global_file_id=absolute_global_file_id):
                 self.process_parsers_by_url_and_id[(filename, process_parser.get_id())] = process_parser
             for global_task_parser in self.create_global_task_parsers_from_bpmn(bpmn, filename=filename):
                 self.global_task_parsers_by_url_and_id[(filename, global_task_parser.get_id())] = global_task_parser
