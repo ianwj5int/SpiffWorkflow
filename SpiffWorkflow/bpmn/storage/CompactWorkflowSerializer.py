@@ -264,7 +264,7 @@ class CompactWorkflowSerializer(Serializer):
 
     """
 
-    STATE_SPEC_VERSION = 1
+    STATE_SPEC_VERSION = 2
 
     def serialize_workflow_spec(self, wf_spec, **kwargs):
         raise NotImplementedError("The CompactWorkflowSerializer only supports workflow serialization.")
@@ -339,7 +339,7 @@ class CompactWorkflowSerializer(Serializer):
     def _restore_workflow_state(self, workflow, state):
         state_list = json.loads('['+state+']')
 
-        self._check_spec_version(state_list[-1])
+        version = self._check_spec_version(state_list[-1])
 
         s = _BpmnProcessSpecState(workflow.spec)
 
@@ -396,4 +396,5 @@ class CompactWorkflowSerializer(Serializer):
 
     def _check_spec_version(self, v):
         #We only have one version right now:
-        assert v == self.STATE_SPEC_VERSION
+        assert v <= self.STATE_SPEC_VERSION
+        return v
