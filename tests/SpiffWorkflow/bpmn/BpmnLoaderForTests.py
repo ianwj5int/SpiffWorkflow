@@ -10,6 +10,7 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser, DynamicFileBasedBpmnParser
 from SpiffWorkflow.bpmn.parser.task_parsers import UserTaskParser, EndEventParser, CallActivityParser
 from SpiffWorkflow.bpmn.parser.util import full_tag
+from SpiffWorkflow.bpmn.parser.GlobalTaskResolver import GlobalTaskResolver
 from SpiffWorkflow.operators import Assign
 import os
 
@@ -76,3 +77,23 @@ class DynamicallyLoadedSubWorflowTestBpmnParser(DynamicFileBasedBpmnParser):
             EclipseConvertAbsolutePlatformImportsToRelativePaths({
                 'platform:/resource/SpiffWorkflow' : os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))),
             })]
+
+class GlobalTaskResolverForTests(GlobalTaskResolver):
+
+    def __init__(self, processes):
+        self.processes = processes
+        self._parsed_processes = {}
+
+    def get_main_process_by_name(self, name):
+        if name not in self._parsed_processes:
+            f = 'file_not_found__'
+            i = 1
+            while not os.path.exists(f):
+                f = os.path.join(os.path.dirname(__file__), 'data', self.processes[name][-i], 'main.bpmn')
+                i+= 1
+            self._parsed_processes[name] = DynamicallyLoadedSubWorflowTestBpmnParser().get_spec(f, 'main')
+
+        return self._parsed_processes[name]
+
+    def get_task_spec(self, global_task_name, global_task_node, calling_process_parser):
+        pass

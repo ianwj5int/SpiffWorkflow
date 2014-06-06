@@ -4,18 +4,27 @@ import time
 from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.BpmnWorkflow import BpmnWorkflow
 from tests.SpiffWorkflow.bpmn.BpmnWorkflowTestCase import DynamicallyLoadedSubWorkflowTestCase
+from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import GlobalTaskResolverForTests
+
 
 
 class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
     def setUp(self):
-        self.spec = self.load_spec()
+        self.resolver = GlobalTaskResolverForTests({
+            'process-01': [
+                'Dynamic-Loading-Workflows/base-package/process-01',
+                'Dynamic-Loading-Workflows/sub-package/process-01',
+                'Dynamic-Loading-Workflows/user-content/process-01'],
+        })
+        self.spec = self.resolver.get_main_process_by_name('process-01')
 
-    def load_spec(self):
-        return self.load_workflow_spec('Dynamic-Loading-Workflows/base-package/process-01/main.bpmn', 'main')
 
     def testRunThroughHappy(self):
 
         self.workflow = BpmnWorkflow(self.spec)
+        self.do_next_named_step('User Task Main User')
+        self.workflow.do_engine_steps()
+        self.save_restore()
         self.do_next_named_step('User Task 02-A')
         self.workflow.do_engine_steps()
         self.save_restore()

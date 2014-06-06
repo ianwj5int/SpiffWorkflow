@@ -105,7 +105,4 @@ class BpmnWorkflowTestCase(unittest.TestCase):
 
 class DynamicallyLoadedSubWorkflowTestCase(BpmnWorkflowTestCase):
 
-    def load_workflow_spec(self, filename, process_id):
-        f = os.path.join(os.path.dirname(__file__), 'data', filename)
-
-        return DynamicallyLoadedSubWorflowTestBpmnParser().get_spec(f, process_id)
+    pass
