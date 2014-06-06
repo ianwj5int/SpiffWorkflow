@@ -256,13 +256,20 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         self.global_task_resolver = global_task_resolver
 
     def resolve_called_activity_spec(self, location, idref, my_call_activity_task=None, absolute_global_task_id=None):
+
+
+        if absolute_global_task_id and self.global_task_resolver:
+            location, idref = self.global_task_resolver.get_location_and_idref_from_absolute_id(absolute_global_task_id)
+        else:
+            filename = os.path.abspath(location)
+            if (filename , idref) in self.global_task_parsers_by_url_and_id:
+                location, idref = self.global_task_resolver.get_location_and_idref_for_global_task(
+                    self.global_task_parsers_by_url_and_id[(filename, idref)], my_call_activity_task)
+
         filename = os.path.abspath(location)
 
         if (filename, idref) in self.process_parsers_by_url_and_id:
             return self.process_parsers_by_url_and_id[(filename, idref)].get_spec()
-
-        if (filename, idref) in self.global_task_parsers_by_url_and_id:
-            return self._resolve_global_task(self.global_task_parsers_by_url_and_id[(filename, idref)], my_call_activity_task)
 
         f = open(filename, 'r')
         try:
@@ -277,8 +284,8 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         finally:
             f.close()
 
-        if (filename, idref) in self.global_task_parsers_by_url_and_id:
-            return self._resolve_global_task(self.global_task_parsers_by_url_and_id[(filename, idref)], my_call_activity_task)
+        if (filename , idref) in self.global_task_parsers_by_url_and_id:
+            return self.resolve_called_activity_spec(filename, idref)
 
         return self.process_parsers_by_url_and_id[(filename, idref)].get_spec()
 

@@ -108,41 +108,33 @@ class GlobalTaskResolverForTests(GlobalTaskResolver):
 
     def __init__(self, processes):
         self.processes = processes
-        self._parsed_processes = {}
-        self._parsed_processes_by_filename_and_process = {}
 
     def get_main_process_by_name(self, name):
-        return self._get_process_spec(name, 'main', 'main')
+        location, idref = self._get_process_location_and_idref(name, 'main', 'main')
+        return DynamicallyLoadedSubWorkflowTestBpmnParser(self).get_spec(location, idref)
 
-    def _get_process_spec(self, collection_name, bpmn_name, process_id):
-        name = '%s.%s.%s' % (collection_name, bpmn_name, process_id)
-        if name not in self._parsed_processes:
-            f = 'file_not_found__'
-            i = 1
-            while not os.path.exists(f):
-                f = os.path.join(os.path.dirname(__file__), 'data', self.processes[collection_name][-i], '%s.bpmn' % bpmn_name)
-                i+= 1
-            f = os.path.abspath(f)
-            if f not in self._parsed_processes_by_filename_and_process:
-                self._parsed_processes_by_filename_and_process[(f,process_id)] = DynamicallyLoadedSubWorkflowTestBpmnParser(self).get_spec(f, process_id)
-            self._parsed_processes[name] = self._parsed_processes_by_filename_and_process[(f,process_id)]
+    def _get_process_location_and_idref(self, collection_name, bpmn_name, process_id):
+        f = 'file_not_found__'
+        i = 1
+        while not os.path.exists(f):
+            f = os.path.join(os.path.dirname(__file__), 'data', self.processes[collection_name][-i], '%s.bpmn' % bpmn_name)
+            i+= 1
+        f = os.path.abspath(f)
 
-        return self._parsed_processes[name]
+        return f, process_id
 
-    def get_task_spec(self, global_task_parser, my_call_activity_task):
+    def get_location_and_idref_for_global_task(self, global_task_parser, my_call_activity_task):
         collection_name = os.path.basename(os.path.dirname(global_task_parser.filename))
         bpmn_name, process_id = global_task_parser.get_name().split(':')
         region = my_call_activity_task.data.get('region') if my_call_activity_task else None
         if region:
             bpmn_name = '%s-%s' % (bpmn_name, region)
-        return self._get_process_spec(collection_name, bpmn_name, process_id)
+        return self._get_process_location_and_idref(collection_name, bpmn_name, process_id)
 
     def get_absolute_global_file_id(self, filename):
         return os.path.relpath(os.path.abspath(filename), os.path.join(os.path.dirname(__file__), 'data'))
 
-    def get_task_spec_from_absolute_id(self, absolute_global_task_id):
+    def get_location_and_idref_from_absolute_id(self, absolute_global_task_id):
         f, process_id = absolute_global_task_id.rsplit(':',1)
         f = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data', f))
-        if f not in self._parsed_processes_by_filename_and_process:
-            self._parsed_processes_by_filename_and_process[(f,process_id)] = DynamicallyLoadedSubWorkflowTestBpmnParser(self).get_spec(f, process_id)
-        return self._parsed_processes_by_filename_and_process[(f,process_id)]
+        return f, process_id

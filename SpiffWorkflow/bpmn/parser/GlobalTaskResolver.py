@@ -27,11 +27,9 @@ class GlobalTaskParser(object):
 
 class GlobalTaskResolver(object):
 
-    def get_task_spec(self, global_task_parser, my_call_activity_task):
+    def get_location_and_idref_for_global_task(self, global_task_parser, my_call_activity_task):
         """
-        Return the task spec for the specified global task.
-
-        Currently, only subworkflow's are supported - i.e. return an instance of BpmnProcessSpec
+        Return the location and idref for the specified global_task_parser based on the runtime state in my_call_activity_task
         """
 
     def get_absolute_global_file_id(self, filename):
@@ -39,7 +37,7 @@ class GlobalTaskResolver(object):
         Return an absolute identifier for the BPMN file that can be used to save the state of a running workflow instance
         """
 
-    def get_task_spec_from_absolute_id(self, absolute_global_task_id):
+    def get_location_and_idref_from_absolute_id(self, absolute_global_task_id):
         """
         Use a previously provided absolute id to locate a global task spec
         """

@@ -56,9 +56,9 @@ class _RouteNode(object):
         n = self
         while n.outgoing:
             assert len(n.outgoing) == 1, "to_list(..) cannot be called after a merge"
-            l.append(n.task_spec)
+            l.append((n.task_spec, n.sub_workflow_spec) if n.sub_workflow_spec else n.task_spec)
             n = n.outgoing[0]
-        l.append(n.task_spec)
+        l.append((n.task_spec, n.sub_workflow_spec) if n.sub_workflow_spec else n.task_spec)
         return l
 
     def contains(self, other_route):
