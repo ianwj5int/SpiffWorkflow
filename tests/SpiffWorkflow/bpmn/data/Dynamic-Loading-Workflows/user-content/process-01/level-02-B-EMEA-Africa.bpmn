@@ -4,12 +4,12 @@
                    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
                    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
                    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                   xmlns:base-process="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/EMEA/level-02-B"
+                   xmlns:base-process="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/sub-package/process-01/level-02-B-EMEA"
                    id="Definitions_1"
-                   targetNamespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/user-content/process-01/EMEA/Africa/level-02-B">
+                   targetNamespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/user-content/process-01/level-02-B-EMEA-Africa">
   <bpmn2:import importType="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                location="platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/base-package/process-01/EMEA/level-02-B.bpmn"
-                namespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/EMEA/level-02-B"/>
+                location="platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/sub-package/process-01/level-02-B-EMEA.bpmn"
+                namespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/sub-package/process-01/level-02-B-EMEA"/>
   <bpmn2:process id="level-02-B" name="Level-02-B" processType="Private">
     <bpmn2:laneSet id="LaneSet_4">
       <bpmn2:lane id="Lane_1" name="User 1">
@@ -19,7 +19,7 @@
         <bpmn2:flowNodeRef>EndEvent_1</bpmn2:flowNodeRef>
       </bpmn2:lane>
     </bpmn2:laneSet>
-    <bpmn2:callActivity id="CallActivity_1" name="Call Base" calledElement="platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/base-package/process-01/EMEA/level-02-B.bpmn#level-02-B">
+    <bpmn2:callActivity id="CallActivity_1" name="Call Base" calledElement="platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/sub-package/process-01/level-02-B-EMEA.bpmn#level-02-B">
       <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
     </bpmn2:callActivity>
