@@ -16,7 +16,7 @@ class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
     def testRunThroughHappy(self):
 
         self.workflow = BpmnWorkflow(self.spec)
-        self.do_next_named_step('User Task 02-A - Rev002')
+        self.do_next_named_step('User Task 02-A')
         self.workflow.do_engine_steps()
         self.save_restore()
         self.assertEquals(1, len(self.workflow.get_tasks(Task.READY)))
