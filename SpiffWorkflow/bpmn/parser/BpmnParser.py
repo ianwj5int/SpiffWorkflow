@@ -238,7 +238,7 @@ class BpmnParser(StaticFileSetBpmnParser):
 class DynamicFileBasedBpmnParser(BaseBpmnParser):
     _DYNAMICALLY_LOAD_SUB_PROCESSES = True
 
-    def __init__(self, global_task_resolver):
+    def __init__(self, global_task_resolver=None):
         """
         Constructor.
         """
