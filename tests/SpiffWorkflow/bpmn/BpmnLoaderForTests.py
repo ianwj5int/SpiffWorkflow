@@ -61,6 +61,9 @@ class TestBpmnParser(BpmnParser):
 class TestWorkflow(BpmnWorkflow):
     def __init__(self, workflow_spec, name=None, script_engine=None, read_only=False, **kwargs):
         super(TestWorkflow, self).__init__(workflow_spec, name=name, script_engine=script_engine, read_only=read_only, **kwargs)
+        p = kwargs.get('parent', None)
+        if p:
+            self.data.update(p.data)
 
 class DynamicallyLoadedSubWorkflowTestBpmnParser(DynamicFileBasedBpmnParser):
 
