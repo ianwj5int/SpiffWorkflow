@@ -6,7 +6,7 @@
                    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
                    xmlns:base-process="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/level-02-B"
                    id="Definitions_1"
-                   targetNamespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/EMEA/level-02-B">
+                   targetNamespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/sub-package/process-01/level-02-B-EMEA">
   <bpmn2:import importType="http://www.omg.org/spec/BPMN/20100524/MODEL"
                 location="platform:/resource/SpiffWorkflow/tests/SpiffWorkflow/bpmn/data/Dynamic-Loading-Workflows/base-package/process-01/level-02-B.bpmn"
                 namespace="https://github.com/knipknap/SpiffWorkflow/bpmn2/tests/Dynamic-Loading-Workflows/base-package/process-01/level-02-B"/>
