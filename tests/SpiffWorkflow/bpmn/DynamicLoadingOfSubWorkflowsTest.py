@@ -11,7 +11,7 @@ class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
         self.spec = self.load_spec()
 
     def load_spec(self):
-        return self.load_workflow_spec('Dynamic-Loading-Workflows/base-package/workflow-source/process-01/main.bpmn', 'main')
+        return self.load_workflow_spec('Dynamic-Loading-Workflows/base-package/process-01/main.bpmn', 'main')
 
     def testRunThroughHappy(self):
 
