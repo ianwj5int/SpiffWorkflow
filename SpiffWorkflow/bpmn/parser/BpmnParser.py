@@ -238,12 +238,13 @@ class BpmnParser(StaticFileSetBpmnParser):
 class DynamicFileBasedBpmnParser(BaseBpmnParser):
     _DYNAMICALLY_LOAD_SUB_PROCESSES = True
 
-    def __init__(self):
+    def __init__(self, global_task_resolver):
         """
         Constructor.
         """
         super(DynamicFileBasedBpmnParser, self).__init__()
         self.process_parsers_by_url_and_id = {}
+        self.global_task_resolver = global_task_resolver
 
     def resolve_process_parser(self, location, idref):
         filename = os.path.abspath(location)
