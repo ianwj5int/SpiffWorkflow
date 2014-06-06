@@ -272,14 +272,14 @@ class CompactWorkflowSerializer(Serializer):
     def deserialize_workflow_spec(self, s_state, **kwargs):
         raise NotImplementedError("The CompactWorkflowSerializer only supports workflow serialization.")
 
-    def serialize_workflow(self, workflow, include_spec=False,**kwargs):
+    def serialize_workflow(self, workflow, include_spec=False, **kwargs):
         """
         :param workflow: the workflow instance to serialize
         :param include_spec: Always set to False (The CompactWorkflowSerializer only supports workflow serialization)
         """
         if include_spec:
             raise NotImplementedError('Including the spec serialization with the workflow state is not implemented.')
-        return self._get_workflow_state(workflow)
+        return self._get_workflow_state(workflow, _force_version=kwargs.get('_force_version', None))
 
     def deserialize_workflow(self, s_state, workflow_spec=None, read_only=False, **kwargs):
         """
@@ -305,7 +305,10 @@ class CompactWorkflowSerializer(Serializer):
         """
         return BpmnWorkflow(workflow_spec, read_only=read_only)
 
-    def _get_workflow_state(self, workflow):
+    def _get_workflow_state(self, workflow, _force_version=None):
+
+        version = _force_version or self.STATE_SPEC_VERSION
+
         active_tasks = workflow.get_tasks(state=(Task.READY | Task.WAITING))
         states = []
 
@@ -329,7 +332,7 @@ class CompactWorkflowSerializer(Serializer):
                 state = state[0]
             compacted_states.append(state)
 
-        state_list = compacted_states+[self.STATE_SPEC_VERSION]
+        state_list = compacted_states+[version]
         state_s = json.dumps(state_list)[1:-1]
         return state_s
 

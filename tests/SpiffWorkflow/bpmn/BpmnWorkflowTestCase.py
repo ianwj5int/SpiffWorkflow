@@ -15,6 +15,8 @@ __author__ = 'matth'
 
 class BpmnWorkflowTestCase(unittest.TestCase):
 
+    TRY_ADDITIONAL_SERIALIZATION_VERSIONS = [1]
+
     def load_workflow_spec(self, filename, process_name):
         f = os.path.join(os.path.dirname(__file__), 'data', filename)
 
@@ -78,17 +80,18 @@ class BpmnWorkflowTestCase(unittest.TestCase):
         tasks[0].complete()
 
     def save_restore(self):
-        state = self._get_workflow_state()
-        logging.debug('Saving state: %s', state)
-        before_dump = self.workflow.get_dump()
-        self.restore(state)
-        #We should still have the same state:
-        after_dump = self.workflow.get_dump()
-        after_state = self._get_workflow_state()
-        if state != after_state:
-            logging.debug("Before save:\n%s", before_dump)
-            logging.debug("After save:\n%s", after_dump)
-        self.assertEquals(state[0], after_state[0])
+        for v in self.TRY_ADDITIONAL_SERIALIZATION_VERSIONS+[None]:
+            state = self._get_workflow_state(_force_version=v)
+            logging.debug('Saving state: %s', state)
+            before_dump = self.workflow.get_dump()
+            self.restore(state)
+            #We should still have the same state:
+            after_dump = self.workflow.get_dump()
+            after_state = self._get_workflow_state(_force_version=v)
+            if state != after_state:
+                logging.debug("Before save:\n%s", before_dump)
+                logging.debug("After save:\n%s", after_dump)
+            self.assertEquals(state[0], after_state[0])
 
     def restore(self, state):
         saved_data = None
@@ -100,11 +103,11 @@ class BpmnWorkflowTestCase(unittest.TestCase):
         state = self._get_workflow_state()
         return TestCompactWorkflowSerializer().deserialize_workflow(state[0], workflow_spec=self.spec, read_only=True, saved_data=state[1])
 
-    def _get_workflow_state(self):
+    def _get_workflow_state(self, _force_version=None):
         self.workflow.do_engine_steps()
         self.workflow.refresh_waiting_tasks()
-        return TestCompactWorkflowSerializer().serialize_workflow(self.workflow, include_spec=False), self.workflow.data
+        return TestCompactWorkflowSerializer().serialize_workflow(self.workflow, include_spec=False, _force_version=_force_version), self.workflow.data
 
 class DynamicallyLoadedSubWorkflowTestCase(BpmnWorkflowTestCase):
 
-    pass
+    TRY_ADDITIONAL_SERIALIZATION_VERSIONS = []
