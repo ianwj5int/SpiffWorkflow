@@ -9,7 +9,23 @@ from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import GlobalTaskResolverForTes
 
 
 class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
-    def setUp(self):
+
+    def setup_spec_base_level(self):
+        self.resolver = GlobalTaskResolverForTests({
+            'process-01': [
+                'Dynamic-Loading-Workflows/base-package/process-01'],
+        })
+        self.spec = self.resolver.get_main_process_by_name('process-01')
+
+    def setup_spec_sub_level(self):
+        self.resolver = GlobalTaskResolverForTests({
+            'process-01': [
+                'Dynamic-Loading-Workflows/base-package/process-01',
+                'Dynamic-Loading-Workflows/sub-package/process-01'],
+        })
+        self.spec = self.resolver.get_main_process_by_name('process-01')
+
+    def setup_spec_user_content_level(self):
         self.resolver = GlobalTaskResolverForTests({
             'process-01': [
                 'Dynamic-Loading-Workflows/base-package/process-01',
@@ -18,13 +34,9 @@ class NestedProcessesTest(DynamicallyLoadedSubWorkflowTestCase):
         })
         self.spec = self.resolver.get_main_process_by_name('process-01')
 
-
-    def testRunThroughHappy(self):
-
+    def testRunThroughBaseLevel(self):
+        self.setup_spec_base_level()
         self.workflow = BpmnWorkflow(self.spec)
-        self.do_next_named_step('User Task Main User')
-        self.workflow.do_engine_steps()
-        self.save_restore()
         self.do_next_named_step('User Task 02-A')
         self.workflow.do_engine_steps()
         self.save_restore()
