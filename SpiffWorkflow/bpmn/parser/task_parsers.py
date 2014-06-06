@@ -115,8 +115,17 @@ class CallActivityParser(TaskParser):
         return self.spec_class(self.spec, self.get_task_spec_name(), wf_spec=wf_spec, wf_class=self.parser.WORKFLOW_CLASS, call_activity_parser=self, description=self.node.get('name', None))
 
     def get_subprocess_parser(self):
+        """
+        This is only used with statically loaded sub_processes
+        """
+        return self.parser.get_process_parser(self.called_element)
+
+    def resolve_called_activity_spec(self):
+        """
+        This is used for dynamic resolution
+        """
         location, idref = self.process_parser.get_location_and_id(self.node, self.called_element)
-        return self.parser.resolve_process_parser(location, idref)
+        return self.parser.resolve_called_activity_spec(location, idref)
 
 
 class ScriptTaskParser(TaskParser):

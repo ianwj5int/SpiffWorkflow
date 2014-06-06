@@ -57,7 +57,7 @@ class TestBpmnParser(BpmnParser):
             return cond
         return "choice == '%s'" % sequence_flow_node.get('name', None)
 
-class DynamicallyLoadedSubWorflowTestBpmnParser(DynamicFileBasedBpmnParser):
+class DynamicallyLoadedSubWorkflowTestBpmnParser(DynamicFileBasedBpmnParser):
 
     OVERRIDE_PARSER_CLASSES = {
         full_tag('userTask')            : (UserTaskParser, TestUserTask),
@@ -72,7 +72,7 @@ class DynamicallyLoadedSubWorflowTestBpmnParser(DynamicFileBasedBpmnParser):
         return "choice == '%s'" % sequence_flow_node.get('name', None)
 
     def get_filters(self):
-        return super(DynamicallyLoadedSubWorflowTestBpmnParser, self).get_filters() + [
+        return super(DynamicallyLoadedSubWorkflowTestBpmnParser, self).get_filters() + [
             EclipseConvertAnchorTypeCalledElementIdsToQNames(),
             EclipseConvertAbsolutePlatformImportsToRelativePaths({
                 'platform:/resource/SpiffWorkflow' : os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))),
@@ -85,15 +85,21 @@ class GlobalTaskResolverForTests(GlobalTaskResolver):
         self._parsed_processes = {}
 
     def get_main_process_by_name(self, name):
+        return self._get_process_spec(name, 'main', 'main')
+
+    def _get_process_spec(self, collection_name, bpmn_name, process_id):
+        name = '%s.%s.%s' % (collection_name, bpmn_name, process_id)
         if name not in self._parsed_processes:
             f = 'file_not_found__'
             i = 1
             while not os.path.exists(f):
-                f = os.path.join(os.path.dirname(__file__), 'data', self.processes[name][-i], 'main.bpmn')
+                f = os.path.join(os.path.dirname(__file__), 'data', self.processes[collection_name][-i], '%s.bpmn' % bpmn_name)
                 i+= 1
-            self._parsed_processes[name] = DynamicallyLoadedSubWorflowTestBpmnParser().get_spec(f, 'main')
+            self._parsed_processes[name] = DynamicallyLoadedSubWorkflowTestBpmnParser(self).get_spec(f, process_id)
 
         return self._parsed_processes[name]
 
-    def get_task_spec(self, global_task_name, global_task_node, calling_process_parser):
-        pass
+    def get_task_spec(self, global_task_parser):
+        collection_name = os.path.basename(os.path.dirname(global_task_parser.filename))
+        bpmn_name, process_id = global_task_parser.get_name().split(':')
+        return self._get_process_spec(collection_name, bpmn_name, process_id)

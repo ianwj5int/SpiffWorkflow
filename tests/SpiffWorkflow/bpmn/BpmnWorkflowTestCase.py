@@ -9,7 +9,6 @@ from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.storage.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.storage.CompactWorkflowSerializer import CompactWorkflowSerializer
 from tests.SpiffWorkflow.bpmn.PackagerForTests import PackagerForTests
-from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import DynamicallyLoadedSubWorflowTestBpmnParser
 
 __author__ = 'matth'
 

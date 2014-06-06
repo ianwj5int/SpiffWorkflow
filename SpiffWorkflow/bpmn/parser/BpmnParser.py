@@ -35,6 +35,7 @@ from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.parser.ProcessParser import ProcessParser
 from SpiffWorkflow.bpmn.parser.util import *
 from SpiffWorkflow.bpmn.parser.task_parsers import *
+from SpiffWorkflow.bpmn.parser.GlobalTaskResolver import GlobalTaskParser
 import xml.etree.ElementTree as ET
 
 class BaseBpmnParser(object):
@@ -67,6 +68,7 @@ class BaseBpmnParser(object):
     OVERRIDE_PARSER_CLASSES = {}
 
     PROCESS_PARSER_CLASS = ProcessParser
+    GLOBAL_TASK_PARSER_CLASS = GlobalTaskParser
     WORKFLOW_CLASS = BpmnWorkflow
     _DYNAMICALLY_LOAD_SUB_PROCESSES = None
 
@@ -84,7 +86,7 @@ class BaseBpmnParser(object):
 
     def create_process_parsers_from_bpmn(self, bpmn, svg=None, filename=None):
         """
-        Add the given lxml representation of the BPMN file to the parser's set.
+        Create process parser objects based on bpmn content.
 
         :param svg: Optionally, provide the text data for the SVG of the BPMN file
         :param filename: Optionally, provide the source filename.
@@ -95,6 +97,19 @@ class BaseBpmnParser(object):
         for process in processes:
             process_parser = self.PROCESS_PARSER_CLASS(self, process, svg, filename=filename, doc_xpath=xpath)
             yield process_parser
+
+    def create_global_task_parsers_from_bpmn(self, bpmn, filename=None):
+        """
+        Create global task parser objects based on bpmn content.
+
+        :param filename: Optionally, provide the source filename.
+        """
+        xpath = xpath_eval(bpmn)
+
+        global_tasks = xpath('.//bpmn:globalTask')
+        for global_task in global_tasks:
+            global_task_parser = self.GLOBAL_TASK_PARSER_CLASS(self, global_task, filename=filename)
+            yield global_task_parser
 
     def _parse_condition(self, outgoing_task, outgoing_task_node, sequence_flow_node, task_parser=None):
         xpath = xpath_eval(sequence_flow_node)
@@ -120,11 +135,6 @@ class BaseBpmnParser(object):
         Pre-parse the documentation node for the given node and return the text.
         """
         return None if documentation_node is None else documentation_node.text
-
-    def resolve_process_parser(self, location, idref):
-        """
-        The subclass must implement this
-        """
 
     def parse_file(self, file):
 
@@ -178,9 +188,6 @@ class StaticFileSetBpmnParser(BaseBpmnParser):
             return self.process_parsers_by_name[process_id_or_name]
         else:
             return self.process_parsers[process_id_or_name]
-
-    def resolve_process_parser(self, location, idref):
-        return self.get_process_parser(idref)
 
     def get_spec(self, process_id_or_name):
         """
@@ -244,13 +251,17 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         """
         super(DynamicFileBasedBpmnParser, self).__init__()
         self.process_parsers_by_url_and_id = {}
+        self.global_task_parsers_by_url_and_id = {}
         self.global_task_resolver = global_task_resolver
 
-    def resolve_process_parser(self, location, idref):
+    def resolve_called_activity_spec(self, location, idref):
         filename = os.path.abspath(location)
 
         if (filename, idref) in self.process_parsers_by_url_and_id:
-            return self.process_parsers_by_url_and_id[(filename, idref)]
+            return self.process_parsers_by_url_and_id[(filename, idref)].get_spec()
+
+        if (filename, idref) in self.global_task_parsers_by_url_and_id:
+            return self._resolve_global_task(self.global_task_parsers_by_url_and_id[(filename, idref)])
 
         f = open(filename, 'r')
         try:
@@ -258,10 +269,19 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
             self.filter(bpmn, filename)
             for process_parser in self.create_process_parsers_from_bpmn(bpmn, svg=None, filename=filename):
                 self.process_parsers_by_url_and_id[(filename, process_parser.get_id())] = process_parser
+            for global_task_parser in self.create_global_task_parsers_from_bpmn(bpmn, filename=filename):
+                self.global_task_parsers_by_url_and_id[(filename, global_task_parser.get_id())] = global_task_parser
+                global_task_parser.parse_node()
         finally:
             f.close()
 
-        return self.process_parsers_by_url_and_id[(filename, idref)]
+        if (filename, idref) in self.global_task_parsers_by_url_and_id:
+            return self._resolve_global_task(self.global_task_parsers_by_url_and_id[(filename, idref)])
+
+        return self.process_parsers_by_url_and_id[(filename, idref)].get_spec()
+
+    def _resolve_global_task(self, global_task_parser):
+        return self.global_task_resolver.get_task_spec(global_task_parser)
 
     def get_spec(self, bpmn_file, process_idref):
-        return self.resolve_process_parser(bpmn_file, process_idref).get_spec()
+        return self.resolve_called_activity_spec(bpmn_file, process_idref)

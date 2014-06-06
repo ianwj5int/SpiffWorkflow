@@ -47,7 +47,7 @@ class CallActivity(SubWorkflow, BpmnSpecMixin):
             parent = my_task.workflow)
 
     def _load_sub_workflow_spec(self):
-        wf_spec = self.call_activity_parser.get_subprocess_parser().get_spec()
+        wf_spec = self.call_activity_parser.resolve_called_activity_spec()
         return wf_spec
 
     def _get_spec(self):
