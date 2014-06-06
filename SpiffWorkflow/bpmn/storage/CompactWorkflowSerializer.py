@@ -162,7 +162,7 @@ class _BpmnProcessSpecState(object):
         else:
             if not task._is_finished():
                 if route_node.sub_workflow_spec and route_node.sub_workflow_spec.start in [o.task_spec for o in route_node.outgoing]:
-                    self._go_in_to_subworkflow(task, [n.task_spec for n in route_node.outgoing])
+                    self._go_in_to_subworkflow(task, [n.task_spec for n in route_node.outgoing], route_node.sub_workflow_spec.absolute_global_task_id)
                 else:
                     self._complete_task_silent(task, [n.task_spec for n in route_node.outgoing])
             for n in route_node.outgoing:
@@ -181,14 +181,14 @@ class _BpmnProcessSpecState(object):
         for task_spec in target_children_specs:
             task._add_child(task_spec)
 
-    def _go_in_to_subworkflow(self, my_task, target_children_specs):
+    def _go_in_to_subworkflow(self, my_task, target_children_specs, absolute_global_task_id):
         #This method simulates the entering of a subworkflow, but without hooks being called, and targeting a specific
         #subset of the entry tasks in the subworkflow. It creates the new workflow instance and merges it in to the tree
         #This is based on SubWorkflow._on_ready_before_hook(..)
         if my_task._is_finished():
             return
 
-        subworkflow    = my_task.task_spec._create_subworkflow(my_task)
+        subworkflow    = my_task.task_spec._create_subworkflow_absolute(my_task, absolute_global_task_id)
         subworkflow.completed_event.connect(my_task.task_spec._on_subworkflow_completed, my_task)
 
         # Create the children (these are the tasks that follow the subworkflow, on completion:

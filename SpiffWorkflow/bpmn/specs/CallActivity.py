@@ -41,7 +41,10 @@ class CallActivity(SubWorkflow, BpmnSpecMixin):
         TaskSpec.test(self)
 
     def _create_subworkflow(self, my_task):
-        return self.get_workflow_class()(self.spec or self._load_sub_workflow_spec(my_task=my_task), name=self.name,
+        return self._create_subworkflow_absolute(my_task, None)
+
+    def _create_subworkflow_absolute(self, my_task, absolute_global_task_id):
+        return self.get_workflow_class()(self.spec or self._load_sub_workflow_spec(my_task=my_task,absolute_global_task_id=absolute_global_task_id), name=self.name,
             read_only = my_task.workflow.read_only,
             script_engine=my_task.workflow.outer_workflow.script_engine,
             parent = my_task.workflow)

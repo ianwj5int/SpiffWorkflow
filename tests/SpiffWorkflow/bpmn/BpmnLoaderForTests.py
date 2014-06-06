@@ -126,8 +126,8 @@ class GlobalTaskResolverForTests(GlobalTaskResolver):
     def get_location_and_idref_for_global_task(self, global_task_parser, my_call_activity_task):
         collection_name = os.path.basename(os.path.dirname(global_task_parser.filename))
         bpmn_name, process_id = global_task_parser.get_name().split(':')
-        region = my_call_activity_task.data.get('region') if my_call_activity_task else None
-        if region:
+        region = my_call_activity_task.workflow.data.get('region') if my_call_activity_task else None
+        if region and bpmn_name == 'level-02-B':
             bpmn_name = '%s-%s' % (bpmn_name, region)
         return self._get_process_location_and_idref(collection_name, bpmn_name, process_id)
 
