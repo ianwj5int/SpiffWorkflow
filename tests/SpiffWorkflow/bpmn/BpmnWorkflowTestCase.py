@@ -7,7 +7,7 @@ import os
 import unittest
 from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.storage.BpmnSerializer import BpmnSerializer
-from SpiffWorkflow.bpmn.storage.CompactWorkflowSerializer import CompactWorkflowSerializer
+from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import TestCompactWorkflowSerializer
 from tests.SpiffWorkflow.bpmn.PackagerForTests import PackagerForTests
 
 __author__ = 'matth'
@@ -91,16 +91,16 @@ class BpmnWorkflowTestCase(unittest.TestCase):
         self.assertEquals(state, after_state)
 
     def restore(self, state):
-        self.workflow = CompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec)
+        self.workflow = TestCompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec)
 
     def get_read_only_workflow(self):
         state = self._get_workflow_state()
-        return CompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec, read_only=True)
+        return TestCompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec, read_only=True)
 
     def _get_workflow_state(self):
         self.workflow.do_engine_steps()
         self.workflow.refresh_waiting_tasks()
-        return CompactWorkflowSerializer().serialize_workflow(self.workflow, include_spec=False)
+        return TestCompactWorkflowSerializer().serialize_workflow(self.workflow, include_spec=False)
 
 class DynamicallyLoadedSubWorkflowTestCase(BpmnWorkflowTestCase):
 

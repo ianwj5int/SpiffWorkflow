@@ -13,11 +13,34 @@ from SpiffWorkflow.bpmn.parser.util import full_tag
 from SpiffWorkflow.bpmn.parser.GlobalTaskResolver import GlobalTaskResolver
 from SpiffWorkflow.operators import Assign
 from SpiffWorkflow.bpmn.BpmnWorkflow import BpmnWorkflow
+from SpiffWorkflow.bpmn.storage.CompactWorkflowSerializer import CompactWorkflowSerializer
 import os
 
 __author__ = 'matth'
 
 #This provides some extensions to the BPMN parser that make it easier to implement testcases
+
+class TestWorkflow(BpmnWorkflow):
+    def __init__(self, workflow_spec, name=None, script_engine=None, read_only=False, **kwargs):
+        super(TestWorkflow, self).__init__(workflow_spec, name=name, script_engine=script_engine, read_only=read_only, **kwargs)
+        p = kwargs.get('parent', None)
+        if p:
+            self.data.update(p.data)
+
+class TestCompactWorkflowSerializer(CompactWorkflowSerializer):
+
+    def new_workflow(self, workflow_spec, read_only=False, saved_data=None, **kwargs):
+        """
+        Create a new workflow instance from the given spec and arguments.
+
+        :param workflow_spec: the workflow spec to use
+        :param read_only: this should be in read only mode
+        :param kwargs: Any extra kwargs passed to the deserialize_workflow method will be passed through here
+        """
+        w = TestWorkflow(workflow_spec, read_only=read_only)
+        if saved_data:
+            w.data.update(saved_data)
+        return w
 
 class TestUserTask(UserTask):
 
@@ -57,13 +80,6 @@ class TestBpmnParser(BpmnParser):
         if cond is not None:
             return cond
         return "choice == '%s'" % sequence_flow_node.get('name', None)
-
-class TestWorkflow(BpmnWorkflow):
-    def __init__(self, workflow_spec, name=None, script_engine=None, read_only=False, **kwargs):
-        super(TestWorkflow, self).__init__(workflow_spec, name=name, script_engine=script_engine, read_only=read_only, **kwargs)
-        p = kwargs.get('parent', None)
-        if p:
-            self.data.update(p.data)
 
 class DynamicallyLoadedSubWorkflowTestBpmnParser(DynamicFileBasedBpmnParser):
 
