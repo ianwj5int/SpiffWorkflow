@@ -124,6 +124,88 @@ class MessageNonInterruptsSpTest(BpmnWorkflowTestCase):
         self.workflow.do_engine_steps()
         self.assertEquals(0, len(self.workflow.get_tasks(Task.READY | Task.WAITING)))
 
+    def testRunThroughMessageOrder3Twice(self):
+
+        self.workflow = BpmnWorkflow(self.spec)
+
+        self.workflow.do_engine_steps()
+
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.READY)))
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.WAITING)))
+
+        self.workflow.accept_message('Test Message')
+
+        self.do_next_named_step('Acknowledge SP Parallel Message')
+        self.workflow.do_engine_steps()
+
+        self.do_next_named_step('Do Something In a Subprocess')
+        self.workflow.do_engine_steps()
+
+        self.do_next_named_step('Try again?', choice='Yes')
+        self.workflow.do_engine_steps()
+
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.READY)))
+        self.assertEquals(2, len(self.workflow.get_tasks(Task.WAITING)))
+
+        self.workflow.accept_message('Test Message')
+
+        self.do_next_named_step('Acknowledge SP Parallel Message')
+        self.workflow.do_engine_steps()
+
+        self.do_next_named_step('Do Something In a Subprocess')
+        self.workflow.do_engine_steps()
+
+        self.do_next_named_step('Try again?', choice='No')
+        self.workflow.do_engine_steps()
+
+        self.workflow.do_engine_steps()
+        self.assertEquals(0, len(self.workflow.get_tasks(Task.READY | Task.WAITING)))
+
+    def testRunThroughMessageOrder3TwiceSaveAndRestore(self):
+
+        self.workflow = BpmnWorkflow(self.spec)
+        self.save_restore()
+
+        self.workflow.do_engine_steps()
+        self.save_restore()
+
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.READY)))
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.WAITING)))
+
+        self.workflow.accept_message('Test Message')
+
+        self.do_next_named_step('Acknowledge SP Parallel Message')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+
+        self.do_next_named_step('Do Something In a Subprocess')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+
+        self.do_next_named_step('Try again?', choice='Yes')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.READY)))
+        self.assertEquals(1, len(self.workflow.get_tasks(Task.WAITING)))
+
+        self.workflow.accept_message('Test Message')
+
+        self.do_next_named_step('Acknowledge SP Parallel Message')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+
+        self.do_next_named_step('Do Something In a Subprocess')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+
+        self.do_next_named_step('Try again?', choice='No')
+        self.workflow.do_engine_steps()
+        self.save_restore()
+
+        self.workflow.do_engine_steps()
+        self.assertEquals(0, len(self.workflow.get_tasks(Task.READY | Task.WAITING)))
+
 def suite():
     return unittest.TestLoader().loadTestsFromTestCase(MessageNonInterruptsSpTest)
 if __name__ == '__main__':
