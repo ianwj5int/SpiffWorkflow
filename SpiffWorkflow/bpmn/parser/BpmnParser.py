@@ -246,24 +246,23 @@ class BpmnParser(StaticFileSetBpmnParser):
 class DynamicFileBasedBpmnParser(BaseBpmnParser):
     _DYNAMICALLY_LOAD_SUB_PROCESSES = True
 
-    def __init__(self, global_task_resolver=None):
+    def __init__(self):
         """
         Constructor.
         """
         super(DynamicFileBasedBpmnParser, self).__init__()
         self.process_parsers_by_url_and_id = {}
         self.global_task_parsers_by_url_and_id = {}
-        self.global_task_resolver = global_task_resolver
 
     def resolve_called_activity_spec(self, location, idref, my_call_activity_task=None, absolute_global_task_id=None):
 
 
-        if absolute_global_task_id and self.global_task_resolver:
-            location, idref = self.global_task_resolver.get_location_and_idref_from_absolute_id(absolute_global_task_id)
+        if absolute_global_task_id:
+            location, idref = self.get_location_and_idref_from_absolute_id(absolute_global_task_id)
         else:
             filename = os.path.abspath(location)
             if (filename , idref) in self.global_task_parsers_by_url_and_id:
-                location, idref = self.global_task_resolver.get_location_and_idref_for_global_task(
+                location, idref = self.get_location_and_idref_for_global_task(
                     self.global_task_parsers_by_url_and_id[(filename, idref)], my_call_activity_task)
 
         filename = os.path.abspath(location)
@@ -275,7 +274,7 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
         try:
             bpmn = self.parse_file(f)
             self.filter(bpmn, filename)
-            absolute_global_file_id = self.global_task_resolver.get_absolute_global_file_id(filename) if self.global_task_resolver else None
+            absolute_global_file_id = self.get_absolute_global_file_id(filename)
             for process_parser in self.create_process_parsers_from_bpmn(bpmn, svg=None, filename=filename, absolute_global_file_id=absolute_global_file_id):
                 self.process_parsers_by_url_and_id[(filename, process_parser.get_id())] = process_parser
             for global_task_parser in self.create_global_task_parsers_from_bpmn(bpmn, filename=filename):
@@ -289,8 +288,20 @@ class DynamicFileBasedBpmnParser(BaseBpmnParser):
 
         return self.process_parsers_by_url_and_id[(filename, idref)].get_spec()
 
-    def _resolve_global_task(self, global_task_parser, my_call_activity_task):
-        return self.global_task_resolver.get_task_spec(global_task_parser, my_call_activity_task)
-
     def get_spec(self, bpmn_file, process_idref):
         return self.resolve_called_activity_spec(bpmn_file, process_idref, None)
+
+    def get_location_and_idref_for_global_task(self, global_task_parser, my_call_activity_task):
+        """
+        Return the location and idref for the specified global_task_parser based on the runtime state in my_call_activity_task
+        """
+
+    def get_absolute_global_file_id(self, filename):
+        """
+        Return an absolute identifier for the BPMN file that can be used to save the state of a running workflow instance
+        """
+
+    def get_location_and_idref_from_absolute_id(self, absolute_global_task_id):
+        """
+        Use a previously provided absolute id to locate a global task spec
+        """

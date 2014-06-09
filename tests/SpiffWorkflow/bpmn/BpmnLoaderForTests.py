@@ -10,7 +10,6 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser, DynamicFileBasedBpmnParser
 from SpiffWorkflow.bpmn.parser.task_parsers import UserTaskParser, EndEventParser, CallActivityParser
 from SpiffWorkflow.bpmn.parser.util import full_tag
-from SpiffWorkflow.bpmn.parser.GlobalTaskResolver import GlobalTaskResolver
 from SpiffWorkflow.operators import Assign
 from SpiffWorkflow.bpmn.BpmnWorkflow import BpmnWorkflow
 from SpiffWorkflow.bpmn.storage.CompactWorkflowSerializer import CompactWorkflowSerializer
@@ -91,6 +90,10 @@ class DynamicallyLoadedSubWorkflowTestBpmnParser(DynamicFileBasedBpmnParser):
 
     WORKFLOW_CLASS = TestWorkflow
 
+    def __init__(self, processes):
+        super(DynamicallyLoadedSubWorkflowTestBpmnParser, self).__init__()
+        self.processes = processes
+
     def parse_condition(self, condition_expression, outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser):
         cond = super(TestBpmnParser, self).parse_condition(condition_expression,outgoing_task, outgoing_task_node, sequence_flow_node, condition_expression_node, task_parser)
         if cond is not None:
@@ -104,14 +107,9 @@ class DynamicallyLoadedSubWorkflowTestBpmnParser(DynamicFileBasedBpmnParser):
                 'platform:/resource/SpiffWorkflow' : os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))),
             })]
 
-class GlobalTaskResolverForTests(GlobalTaskResolver):
-
-    def __init__(self, processes):
-        self.processes = processes
-
     def get_main_process_by_name(self, name):
         location, idref = self._get_process_location_and_idref(name, 'main', 'main')
-        return DynamicallyLoadedSubWorkflowTestBpmnParser(self).get_spec(location, idref)
+        return self.get_spec(location, idref)
 
     def _get_process_location_and_idref(self, collection_name, bpmn_name, process_id):
         f = 'file_not_found__'

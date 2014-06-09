@@ -3,35 +3,35 @@ import datetime
 import time
 from SpiffWorkflow.Task import Task
 from tests.SpiffWorkflow.bpmn.BpmnWorkflowTestCase import DynamicallyLoadedSubWorkflowTestCase
-from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import GlobalTaskResolverForTests, TestWorkflow
+from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import DynamicallyLoadedSubWorkflowTestBpmnParser, TestWorkflow
 
 
 
 class DynamicLoadingOfSubWorkflowsTest(DynamicallyLoadedSubWorkflowTestCase):
 
     def setup_spec_base_level(self):
-        self.resolver = GlobalTaskResolverForTests({
+        self.parser = DynamicallyLoadedSubWorkflowTestBpmnParser({
             'process-01': [
                 'Dynamic-Loading-Workflows/base-package/process-01'],
         })
-        return self.resolver.get_main_process_by_name('process-01')
+        return self.parser.get_main_process_by_name('process-01')
 
     def setup_spec_sub_level(self):
-        self.resolver = GlobalTaskResolverForTests({
+        self.parser = DynamicallyLoadedSubWorkflowTestBpmnParser({
             'process-01': [
                 'Dynamic-Loading-Workflows/base-package/process-01',
                 'Dynamic-Loading-Workflows/sub-package/process-01'],
         })
-        return self.resolver.get_main_process_by_name('process-01')
+        return self.parser.get_main_process_by_name('process-01')
 
     def setup_spec_user_content_level(self):
-        self.resolver = GlobalTaskResolverForTests({
+        self.parser = DynamicallyLoadedSubWorkflowTestBpmnParser({
             'process-01': [
                 'Dynamic-Loading-Workflows/base-package/process-01',
                 'Dynamic-Loading-Workflows/sub-package/process-01',
                 'Dynamic-Loading-Workflows/user-content/process-01'],
         })
-        return self.resolver.get_main_process_by_name('process-01')
+        return self.parser.get_main_process_by_name('process-01')
 
     def testRunThroughBaseLevel(self):
         spec = self.setup_spec_base_level()

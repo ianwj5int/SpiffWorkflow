@@ -116,4 +116,4 @@ class DynamicallyLoadedSubWorkflowTestCase(BpmnWorkflowTestCase):
     TRY_ADDITIONAL_SERIALIZATION_VERSIONS = []
 
     def deserialise(self, state, saved_data, read_only=False):
-        return TestCompactWorkflowSerializer(DynamicallyLoadedSubWorkflowTestBpmnParser(self.resolver)).deserialize_workflow(state, read_only=read_only, saved_data=saved_data)
+        return TestCompactWorkflowSerializer(self.parser).deserialize_workflow(state, read_only=read_only, saved_data=saved_data)
