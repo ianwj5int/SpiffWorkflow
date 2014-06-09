@@ -275,6 +275,11 @@ class CompactWorkflowSerializer(Serializer):
 
     """
 
+    def __init__(self, dynamic_bpmn_parser=None):
+        super(CompactWorkflowSerializer, self).__init__()
+        self.dynamic_bpmn_parser = dynamic_bpmn_parser
+
+
     STATE_SPEC_VERSION = 2
 
     def serialize_workflow_spec(self, wf_spec, **kwargs):
@@ -295,15 +300,12 @@ class CompactWorkflowSerializer(Serializer):
     def deserialize_workflow(self, s_state, workflow_spec=None, read_only=False, **kwargs):
         """
         :param s_state: the state of the workflow as returned by serialize_workflow
-        :param workflow_spec: the Workflow Spec of the workflow (CompactWorkflowSerializer only supports workflow serialization)
+        :param workflow_spec: the Workflow Spec of the workflow (CompactWorkflowSerializer only supports workflow serialization, unless a global_task_resolver is provided)
         :param read_only: (Optional) True if the workflow should be restored in READ ONLY mode
 
         NB: Additional kwargs passed to the deserialize_workflow method will be passed to the new_workflow method.
         """
-        if workflow_spec is None:
-            raise NotImplementedError('Including the spec serialization with the workflow state is not implemented. A \'workflow_spec\' must be provided.')
-        workflow = self.new_workflow(workflow_spec, read_only=read_only, **kwargs)
-        self._restore_workflow_state(workflow, s_state)
+        workflow = self._restore_workflow_state(s_state, workflow_spec=workflow_spec, read_only=read_only, **kwargs)
         return workflow
 
     def new_workflow(self, workflow_spec, read_only=False, **kwargs):
@@ -354,13 +356,25 @@ class CompactWorkflowSerializer(Serializer):
             compacted_states.append(state)
 
         state_list = compacted_states+[version]
+        if version > 1:
+            state_list = [workflow.spec.absolute_global_task_id] + state_list
         state_s = json.dumps(state_list)[1:-1]
         return state_s
 
-    def _restore_workflow_state(self, workflow, state):
+    def _restore_workflow_state(self, state, workflow_spec=None, read_only=False, **kwargs):
         state_list = json.loads('['+state+']')
 
         version = self._check_spec_version(state_list[-1])
+
+        if version > 1:
+            absolute_global_task_id = state_list.pop(0)
+            if self.dynamic_bpmn_parser:
+                workflow_spec = self.dynamic_bpmn_parser.resolve_called_activity_spec(None, None, absolute_global_task_id=absolute_global_task_id)
+
+        if workflow_spec is None:
+            raise NotImplementedError('Including the spec serialization with the workflow state is not implemented. A \'workflow_spec\' must be provided.')
+
+        workflow = self.new_workflow(workflow_spec, read_only=read_only, **kwargs)
 
         s = _BpmnProcessSpecState(workflow.spec)
 
@@ -410,10 +424,12 @@ class CompactWorkflowSerializer(Serializer):
         try:
             if len(state_list) <= 1:
                 workflow.cancel(success=True)
-                return
+                return workflow
             s.go(workflow)
         finally:
             workflow._busy_with_restore = False
+
+        return workflow
 
     def _check_spec_version(self, v):
         #We only have one version right now:

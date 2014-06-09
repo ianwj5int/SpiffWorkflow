@@ -7,7 +7,7 @@ import os
 import unittest
 from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.storage.BpmnSerializer import BpmnSerializer
-from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import TestCompactWorkflowSerializer
+from tests.SpiffWorkflow.bpmn.BpmnLoaderForTests import TestCompactWorkflowSerializer, DynamicallyLoadedSubWorkflowTestBpmnParser
 from tests.SpiffWorkflow.bpmn.PackagerForTests import PackagerForTests
 
 __author__ = 'matth'
@@ -97,17 +97,23 @@ class BpmnWorkflowTestCase(unittest.TestCase):
         saved_data = None
         if isinstance(state, tuple):
             state, saved_data = state
-        self.workflow = TestCompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec, saved_data=saved_data)
+        self.workflow = self.deserialise(state, saved_data)
 
     def get_read_only_workflow(self):
         state = self._get_workflow_state()
-        return TestCompactWorkflowSerializer().deserialize_workflow(state[0], workflow_spec=self.spec, read_only=True, saved_data=state[1])
+        return self.deserialise(state[0], state[1], read_only=True)
 
     def _get_workflow_state(self, _force_version=None):
         self.workflow.do_engine_steps()
         self.workflow.refresh_waiting_tasks()
-        return TestCompactWorkflowSerializer().serialize_workflow(self.workflow, include_spec=False, _force_version=_force_version), self.workflow.data
+        return TestCompactWorkflowSerializer().serialize_workflow(self.workflow, _force_version=_force_version), self.workflow.data
+
+    def deserialise(self, state, saved_data, read_only=False):
+        return TestCompactWorkflowSerializer().deserialize_workflow(state, workflow_spec=self.spec, read_only=read_only, saved_data=saved_data)
 
 class DynamicallyLoadedSubWorkflowTestCase(BpmnWorkflowTestCase):
 
     TRY_ADDITIONAL_SERIALIZATION_VERSIONS = []
+
+    def deserialise(self, state, saved_data, read_only=False):
+        return TestCompactWorkflowSerializer(DynamicallyLoadedSubWorkflowTestBpmnParser(self.resolver)).deserialize_workflow(state, read_only=read_only, saved_data=saved_data)
