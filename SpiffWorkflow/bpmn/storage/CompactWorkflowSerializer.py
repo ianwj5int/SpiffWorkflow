@@ -51,19 +51,19 @@ class _RouteNode(object):
         m = [r for r in self.outgoing if r.task_spec == task_spec]
         return m[0] if m else None
 
-    def to_list(self):
+    def to_list(self, no_tuples_for_call_activities=False):
         l = []
         n = self
         while n.outgoing:
             assert len(n.outgoing) == 1, "to_list(..) cannot be called after a merge"
-            l.append((n.task_spec, n.sub_workflow_spec) if n.sub_workflow_spec else n.task_spec)
+            l.append((n.task_spec, n.sub_workflow_spec) if n.sub_workflow_spec and not no_tuples_for_call_activities else n.task_spec)
             n = n.outgoing[0]
-        l.append((n.task_spec, n.sub_workflow_spec) if n.sub_workflow_spec else n.task_spec)
+        l.append((n.task_spec, n.sub_workflow_spec) if n.sub_workflow_spec and not no_tuples_for_call_activities else n.task_spec)
         return l
 
-    def contains(self, other_route):
+    def contains(self, other_route, no_tuples_for_call_activities=False):
         if isinstance(other_route, list):
-            return self.to_list()[0:len(other_route)]==other_route
+            return self.to_list(no_tuples_for_call_activities=no_tuples_for_call_activities)[0:len(other_route)]==other_route
 
         #This only works before merging
         assert len(other_route.outgoing) <= 1, "contains(..) cannot be called after a merge"
@@ -71,7 +71,7 @@ class _RouteNode(object):
 
         if other_route.task_spec == self.task_spec:
             if other_route.outgoing and self.outgoing:
-                return self.outgoing[0].contains(other_route.outgoing[0])
+                return self.outgoing[0].contains(other_route.outgoing[0], no_tuples_for_call_activities=no_tuples_for_call_activities)
             elif self.outgoing:
                 return True
             elif not other_route.outgoing:
@@ -101,8 +101,8 @@ class _BpmnProcessSpecState(object):
             if route is None:
                 raise UnrecoverableWorkflowChange('No path found for route \'%s\'' % transition)
             sub_workflow_spec = route[-1]._get_spec(absolute_global_task_id)
+            route_to_parent_complete = route + [route[-1].outputs[0]]
             route[-1] = (route[-1], sub_workflow_spec)
-            route_to_parent_complete = route + [route[-1][0].outputs[0]]
             route = route + [sub_workflow_spec.start]
         route = self._breadth_first_transition_search(transition, route, taken_routes=taken_routes)
         if route is None:
@@ -390,7 +390,7 @@ class CompactWorkflowSerializer(Serializer):
                         continue
                     other_route = routes[j][0]
                     route_to_parent_complete = routes[j][1]
-                    if route.contains(other_route) or (route_to_parent_complete and route.contains(route_to_parent_complete)):
+                    if route.contains(other_route) or (route_to_parent_complete and route.contains(route_to_parent_complete, no_tuples_for_call_activities=True)):
                         taken_routes = [r for r in routes if r[0]!=route]
                         taken_routes = [r for r in [r[0] for r in taken_routes] + [r[1] for r in taken_routes] if r]
                         route, route_to_parent_complete = s.get_path_to_transition(transition, state, workflow_parents, version, taken_routes=taken_routes)
