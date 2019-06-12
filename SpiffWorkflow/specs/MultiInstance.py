@@ -1,48 +1,55 @@
+# -*- coding: utf-8 -*-
+from __future__ import division, absolute_import
+from builtins import range
 # Copyright (C) 2007 Samuel Abels
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-# 
+#
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-from SpiffWorkflow.Task import Task
-from SpiffWorkflow.exceptions import WorkflowException
-from SpiffWorkflow.specs.TaskSpec import TaskSpec
-from SpiffWorkflow.operators import valueof
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
+from ..task import Task
+from .base import TaskSpec
+from ..operators import valueof
+
 
 class MultiInstance(TaskSpec):
+
     """
     When executed, this task performs a split on the current task.
     The number of outgoing tasks depends on the runtime value of a
-    specified attribute.
+    specified data field.
     If more than one input is connected, the task performs an implicit
     multi merge.
 
     This task has one or more inputs and may have any number of outputs.
     """
 
-    def __init__(self, parent, name, times = None, **kwargs):
+    def __init__(self, wf_spec, name, times, **kwargs):
         """
         Constructor.
-        
-        :type  parent: TaskSpec
-        :param parent: A reference to the parent task spec.
+
+        :type  wf_spec: WorkflowSpec
+        :param wf_spec: A reference to the workflow specification.
         :type  name: str
         :param name: The name of the task spec.
-        :type  times: int
+        :type  times: int or :class:`SpiffWorkflow.operators.Term`
         :param times: The number of tasks to create.
         :type  kwargs: dict
-        :param kwargs: See L{SpiffWorkflow.specs.TaskSpec}.
+        :param kwargs: See :class:`SpiffWorkflow.specs.TaskSpec`.
         """
-        TaskSpec.__init__(self, parent, name, **kwargs)
+        if times is None:
+            raise ValueError('times argument is required')
+        TaskSpec.__init__(self, wf_spec, name, **kwargs)
         self.times = times
 
     def _find_my_task(self, task):
@@ -70,7 +77,7 @@ class MultiInstance(TaskSpec):
             output._predict(new_task)
 
     def _get_predicted_outputs(self, my_task):
-        split_n = my_task._get_internal_attribute('splits', 1)
+        split_n = int(valueof(my_task, self.times, 1))
 
         # Predict the outputs.
         outputs = []
@@ -79,10 +86,8 @@ class MultiInstance(TaskSpec):
         return outputs
 
     def _predict_hook(self, my_task):
-        split_n = valueof(my_task, self.times)
-        if split_n is None:
-            return
-        my_task._set_internal_attribute(splits = split_n)
+        split_n = int(valueof(my_task, self.times, 1))
+        my_task._set_internal_data(splits=split_n)
 
         # Create the outgoing tasks.
         outputs = []
@@ -97,11 +102,11 @@ class MultiInstance(TaskSpec):
         outputs = self._get_predicted_outputs(my_task)
         my_task._sync_children(outputs, Task.FUTURE)
         for child in my_task.children:
-            child.task_spec._update_state(child)
+            child.task_spec._update(child)
 
     def serialize(self, serializer):
-        return serializer._serialize_multi_instance(self)
+        return serializer.serialize_multi_instance(self)
 
     @classmethod
     def deserialize(self, serializer, wf_spec, s_state):
-        return serializer._deserialize_multi_instance(wf_spec, s_state)
+        return serializer.deserialize_multi_instance(wf_spec, s_state)

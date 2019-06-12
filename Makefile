@@ -3,15 +3,14 @@ VERSION=`python setup.py --version`
 PREFIX=/usr/local/
 BIN_DIR=$(PREFIX)/bin
 SITE_DIR=$(PREFIX)`python -c "import sys; from distutils.sysconfig import get_python_lib; print get_python_lib()[len(sys.prefix):]"`
-DISTDIR=/pub/code/releases/spiff_workflow
 
 ###################################################################
 # Standard targets.
 ###################################################################
 .PHONY : clean
 clean:
-	find . -name "*.pyc" -o -name "*.pyo" | xargs -n1 rm -f
-	find . -name "*.egg-info" | xargs -n1 rm -r
+	find . -name "*.pyc" -o -name "*.pyo" | xargs -rn1 rm -f
+	find . -name "*.egg-info" | xargs -rn1 rm -r
 	rm -Rf build
 	cd doc; make clean
 
@@ -43,31 +42,33 @@ tests:
 ###################################################################
 # Package builders.
 ###################################################################
-targz:
+targz: clean
 	./version.sh
 	python setup.py sdist --formats gztar
 	./version.sh --reset
 
-tarbz:
+tarbz: clean
 	./version.sh
 	python setup.py sdist --formats bztar
 	./version.sh --reset
 
-deb:
+wheel: clean
+	./version.sh
+	python setup.py bdist_wheel --universal
+	./version.sh --reset
+
+deb: clean
 	./version.sh
 	debuild -S -sa
 	cd ..; sudo pbuilder build $(NAME)_$(VERSION)-0ubuntu1.dsc; cd -
 	./version.sh --reset
 
-dist: targz tarbz
+dist: targz tarbz wheel
 
 ###################################################################
 # Publishers.
 ###################################################################
-dist-publish: dist
-	mkdir -p $(DISTDIR)/
-	mv dist/* $(DISTDIR)
-
-.PHONY : doc-publish
-doc-publish:
-	cd doc; make publish
+dist-publish:
+	./version.sh
+	python setup.py bdist_wheel --universal upload
+	./version.sh --reset

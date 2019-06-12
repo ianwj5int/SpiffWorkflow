@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
 # Copyright (C) 2012 Matthew Hampton
 #
 # This library is free software; you can redistribute it and/or
@@ -12,19 +14,24 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 import logging
-from SpiffWorkflow.Task import Task
-from SpiffWorkflow.bpmn.specs.UnstructuredJoin import UnstructuredJoin
-from SpiffWorkflow.specs.Simple import Simple
-from SpiffWorkflow.specs.WorkflowSpec import WorkflowSpec
+from ...task import Task
+from .UnstructuredJoin import UnstructuredJoin
+from ...specs.Simple import Simple
+from ...specs.WorkflowSpec import WorkflowSpec
 import xml.etree.ElementTree as ET
+
+
+LOG = logging.getLogger(__name__)
+
 
 class _EndJoin(UnstructuredJoin):
 
-    def _try_fire_unstructured(self, my_task, force=False):
-        # Look at the tree to find all ready and waiting tasks (excluding ourself).
-        # The EndJoin waits for everyone!
+    def _check_threshold_unstructured(self, my_task, force=False):
+        # Look at the tree to find all ready and waiting tasks (excluding
+        # ourself). The EndJoin waits for everyone!
         waiting_tasks = []
         for task in my_task.workflow.get_tasks(Task.READY | Task.WAITING):
             if task.thread_id != my_task.thread_id:
@@ -43,27 +50,32 @@ class _EndJoin(UnstructuredJoin):
             if is_mine:
                 waiting_tasks.append(task)
 
-        if len(waiting_tasks)==0:
-            logging.debug('Endjoin Task ready: %s (ready/waiting tasks: %s)', my_task, list(my_task.workflow.get_tasks(Task.READY | Task.WAITING)))
+        if len(waiting_tasks) == 0:
+            LOG.debug(
+                'Endjoin Task ready: %s (ready/waiting tasks: %s)',
+                my_task,
+                list(my_task.workflow.get_tasks(Task.READY | Task.WAITING)))
 
         return force or len(waiting_tasks) == 0, waiting_tasks
 
     def _on_complete_hook(self, my_task):
         super(_EndJoin, self)._on_complete_hook(my_task)
-        my_task.workflow.attributes.update(my_task.get_attributes())
+        my_task.workflow.data.update(my_task.data)
 
 
 class BpmnProcessSpec(WorkflowSpec):
     """
-    This class represents the specification of a BPMN process workflow. This specialises the
-    standard Spiff WorkflowSpec class with a few extra methods and attributes.
+    This class represents the specification of a BPMN process workflow. This
+    specialises the standard Spiff WorkflowSpec class with a few extra methods
+    and attributes.
     """
 
     def __init__(self, name=None, description=None, filename=None, svg=None):
         """
         Constructor.
 
-        :param svg: This provides the SVG representation of the workflow as an LXML node. (optional)
+        :param svg: This provides the SVG representation of the workflow as an
+        LXML node. (optional)
         """
         super(BpmnProcessSpec, self).__init__(name=name, filename=filename)
         self.end = _EndJoin(self, '%s.EndJoin' % (self.name))
@@ -74,7 +86,8 @@ class BpmnProcessSpec(WorkflowSpec):
 
     def get_all_lanes(self):
         """
-        Returns a set of the distinct lane names used in the process (including called activities)
+        Returns a set of the distinct lane names used in the process (including
+        called activities)
         """
 
         done = set()
@@ -101,7 +114,8 @@ class BpmnProcessSpec(WorkflowSpec):
 
     def get_specs_depth_first(self):
         """
-        Get the specs for all processes (including called ones), in depth first order.
+        Get the specs for all processes (including called ones), in depth first
+        order.
         """
 
         done = set()
@@ -126,8 +140,8 @@ class BpmnProcessSpec(WorkflowSpec):
 
     def to_html_string(self):
         """
-        Returns an etree HTML node with a document describing the process. This is only supported
-        if the editor provided an SVG representation.
+        Returns an etree HTML node with a document describing the process. This
+        is only supported if the editor provided an SVG representation.
         """
         html = ET.Element('html')
         head = ET.SubElement(html, 'head')
@@ -144,11 +158,7 @@ class BpmnProcessSpec(WorkflowSpec):
         svg_content = ''
         svg_done = set()
         for spec in self.get_specs_depth_first():
-            if spec.svg and not spec.svg in svg_done:
+            if spec.svg and spec.svg not in svg_done:
                 svg_content += '<p>' + spec.svg + "</p>"
                 svg_done.add(spec.svg)
-        return html_text.replace('___CONTENT___',svg_content)
-
-
-
-
+        return html_text.replace('___CONTENT___', svg_content)

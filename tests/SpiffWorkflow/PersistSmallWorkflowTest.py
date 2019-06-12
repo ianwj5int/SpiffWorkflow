@@ -1,15 +1,20 @@
-import sys, unittest, os.path
+# -*- coding: utf-8 -*-
+from __future__ import print_function, absolute_import, division
+import sys
+import unittest
+import os.path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from SpiffWorkflow import Workflow
 from SpiffWorkflow.specs import *
 from SpiffWorkflow.operators import *
-from SpiffWorkflow.Task import *
+from SpiffWorkflow.task import Task
 from SpiffWorkflow.specs.Simple import Simple
-from SpiffWorkflow.storage import DictionarySerializer
+from SpiffWorkflow.serializer.dict import DictionarySerializer
 
 
 class ASmallWorkflow(WorkflowSpec):
+
     def __init__(self):
         super(ASmallWorkflow, self).__init__(name="asmallworkflow")
 
@@ -32,7 +37,9 @@ class ASmallWorkflow(WorkflowSpec):
 
 
 class PersistSmallWorkflowTest(unittest.TestCase):
+
     """Runs persistency tests agains a small and easy to inspect workflowdefinition"""
+
     def setUp(self):
         self.wf_spec = ASmallWorkflow()
         self.workflow = self._advance_to_a1(self.wf_spec)
@@ -66,25 +73,45 @@ class PersistSmallWorkflowTest(unittest.TestCase):
 
         before = old_workflow.get_dump()
         after = new_workflow.get_dump()
-        self.assert_(before == after, 'Before:\n' + before + '\n' \
-                                    + 'After:\n' + after + '\n')
+        self.assertEqual(before, after)
 
     def testDeserialization(self):
         """
         Tests the that deserialized workflow matches the original workflow
         """
         old_workflow = self.workflow
-        old_workflow.spec.start.set_property(marker=True)
+        old_workflow.spec.start.set_data(marker=True)
         serializer = DictionarySerializer()
         serialized_workflow = old_workflow.serialize(serializer)
 
         serializer = DictionarySerializer()
         new_workflow = Workflow.deserialize(serializer, serialized_workflow)
 
-        self.assertEqual(len(new_workflow.get_tasks()), len(old_workflow.get_tasks()))
-        self.assertEqual(new_workflow.spec.start.get_property('marker'), old_workflow.spec.start.get_property('marker'))
-        self.assertEqual(1, len([t for t in new_workflow.get_tasks() if t.task_spec.name == 'Start']))
-        self.assertEqual(1, len([t for t in new_workflow.get_tasks() if t.task_spec.name == 'Root']))
+        self.assertEqual(
+            len(new_workflow.get_tasks()), len(old_workflow.get_tasks()))
+        self.assertEqual(new_workflow.spec.start.get_data(
+            'marker'), old_workflow.spec.start.get_data('marker'))
+        self.assertEqual(
+            1, len([t for t in new_workflow.get_tasks() if t.task_spec.name == 'Start']))
+        self.assertEqual(
+            1, len([t for t in new_workflow.get_tasks() if t.task_spec.name == 'Root']))
+
+    def testDeserialization(self):
+        """
+        Tests the that deserialized workflow can be completed.
+        """
+        old_workflow = self.workflow
+
+        old_workflow.complete_next()
+        self.assertEqual('task_a2', old_workflow.last_task.get_name())
+        serializer = DictionarySerializer()
+        serialized_workflow = old_workflow.serialize(serializer)
+
+        serializer = DictionarySerializer()
+        new_workflow = Workflow.deserialize(serializer, serialized_workflow)
+        self.assertEqual('task_a2', old_workflow.last_task.get_name())
+        new_workflow.complete_all()
+        self.assertEqual('task_a2', old_workflow.last_task.get_name())
 
 
 def suite():
