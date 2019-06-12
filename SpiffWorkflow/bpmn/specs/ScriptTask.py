@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
 # Copyright (C) 2012 Matthew Hampton
 #
 # This library is free software; you can redistribute it and/or
@@ -12,29 +14,46 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
+import logging
 
-from SpiffWorkflow.bpmn.specs.BpmnSpecMixin import BpmnSpecMixin
-from SpiffWorkflow.specs.Simple import Simple
+from .BpmnSpecMixin import BpmnSpecMixin
+from ...task import Task
+from ...specs.Simple import Simple
+from ...exceptions import WorkflowTaskExecException
+
+LOG = logging.getLogger(__name__)
+
 
 class ScriptTask(Simple, BpmnSpecMixin):
+
     """
     Task Spec for a bpmn:scriptTask node.
     """
 
-    def __init__(self, parent, name, script, **kwargs):
+    def __init__(self, wf_spec, name, script, **kwargs):
         """
         Constructor.
 
         :param script: the script that must be executed by the script engine.
         """
-        super(ScriptTask, self).__init__(parent, name, **kwargs)
+        super(ScriptTask, self).__init__(wf_spec, name, **kwargs)
         self.script = script
 
     def _on_complete_hook(self, task):
         if task.workflow._is_busy_with_restore():
             return
         assert not task.workflow.read_only
-        task.workflow.script_engine.execute(task, self.script)
+        try:
+            task.workflow.script_engine.execute(task, self.script, **task.data)
+        except Exception:
+            LOG.error('Error executing ScriptTask; task=%r',
+                      task, exc_info=True)
+            # set state to WAITING (because it is definitely not COMPLETED)
+            # and raise WorkflowException pointing to this task because
+            # maybe upstream someone will be able to handle this situation
+            task._setstate(Task.WAITING, force=True)
+            raise WorkflowTaskExecException(
+                task, 'Error during script execution')
         super(ScriptTask, self)._on_complete_hook(task)
-

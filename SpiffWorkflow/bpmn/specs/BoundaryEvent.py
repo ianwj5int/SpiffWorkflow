@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import division
 # Copyright (C) 2012 Matthew Hampton
 #
 # This library is free software; you can redistribute it and/or
@@ -12,26 +14,33 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
-from SpiffWorkflow.Task import Task
-from SpiffWorkflow.bpmn.specs.BpmnSpecMixin import BpmnSpecMixin
-from SpiffWorkflow.bpmn.specs.IntermediateCatchEvent import IntermediateCatchEvent
+from ...task import Task
+from .BpmnSpecMixin import BpmnSpecMixin
+from .IntermediateCatchEvent import IntermediateCatchEvent
+
 
 class _BoundaryEventParent(BpmnSpecMixin):
 
-    def __init__(self, parent, name, main_child_task_spec, lane=None, **kwargs):
-        super(_BoundaryEventParent, self).__init__(parent, name, lane=lane, **kwargs)
+    def __init__(self, wf_spec, name, main_child_task_spec, lane=None,
+                 **kwargs):
+        super(_BoundaryEventParent, self).__init__(
+            wf_spec, name, lane=lane, **kwargs)
         self.main_child_task_spec = main_child_task_spec
 
     def _child_complete_hook(self, child_task):
-        if child_task.task_spec == self.main_child_task_spec or self._should_cancel(child_task.task_spec):
+        if (child_task.task_spec == self.main_child_task_spec or
+                self._should_cancel(child_task.task_spec)):
             for sibling in child_task.parent.children:
                 if sibling != child_task:
-                    if sibling.task_spec == self.main_child_task_spec or (isinstance(sibling.task_spec, BoundaryEvent) and not sibling._is_finished()):
+                    if (sibling.task_spec == self.main_child_task_spec or
+                        (isinstance(sibling.task_spec, BoundaryEvent)
+                         and not sibling._is_finished())):
                         sibling.cancel()
             for t in child_task.workflow._get_waiting_tasks():
-                t.task_spec._update_state(t)
+                t.task_spec._update(t)
 
     def _predict_hook(self, my_task):
         # We default to MAYBE
@@ -49,18 +58,22 @@ class _BoundaryEventParent(BpmnSpecMixin):
                 child._set_state(state)
 
     def _should_cancel(self, task_spec):
-        return issubclass(task_spec.__class__, BoundaryEvent) and task_spec._cancel_activity
+        return (issubclass(task_spec.__class__, BoundaryEvent) and
+                task_spec._cancel_activity)
+
 
 class BoundaryEvent(IntermediateCatchEvent):
     """
     Task Spec for a bpmn:boundaryEvent node.
     """
 
-    def __init__(self, parent, name, cancel_activity=None, event_definition=None, **kwargs):
+    def __init__(self, wf_spec, name, cancel_activity=None,
+                 event_definition=None, **kwargs):
         """
         Constructor.
 
         :param cancel_activity: True if this is a Cancelling boundary event.
         """
-        super(BoundaryEvent, self).__init__(parent, name, event_definition=event_definition, **kwargs)
+        super(BoundaryEvent, self).__init__(
+            wf_spec, name, event_definition=event_definition, **kwargs)
         self._cancel_activity = cancel_activity

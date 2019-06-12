@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import division, absolute_import
+from builtins import object
 # Copyright (C) 2012 Matthew Hampton
 #
 # This library is free software; you can redistribute it and/or
@@ -12,11 +15,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
 
-from SpiffWorkflow.Task import Task
-from SpiffWorkflow.operators import Operator
-from SpiffWorkflow.specs.TaskSpec import TaskSpec
+from ...task import Task
+from ...operators import Operator
+from ...specs import TaskSpec
+
 
 class _BpmnCondition(Operator):
 
@@ -28,7 +33,9 @@ class _BpmnCondition(Operator):
     def _matches(self, task):
         return task.workflow.script_engine.evaluate(task, self.args[0])
 
+
 class SequenceFlow(object):
+
     """
     Keeps information relating to a sequence flow
     """
@@ -42,46 +49,57 @@ class SequenceFlow(object):
         self.documentation = documentation
         self.target_task_spec = target_task_spec
 
+
 class BpmnSpecMixin(TaskSpec):
     """
-    All BPMN spec classes should mix this superclass in. It adds a number of methods that are
-    BPMN specific to the TaskSpec.
+    All BPMN spec classes should mix this superclass in. It adds a number of
+    methods that are BPMN specific to the TaskSpec.
     """
 
-    def __init__(self, parent, name, lane=None, **kwargs):
+    def __init__(self, wf_spec, name, lane=None, **kwargs):
         """
         Constructor.
 
-        :param lane: Indicates the name of the lane that this task belongs to (optional).
+        :param lane: Indicates the name of the lane that this task belongs to
+        (optional).
         """
-        super(BpmnSpecMixin, self).__init__(parent, name, **kwargs)
+        super(BpmnSpecMixin, self).__init__(wf_spec, name, **kwargs)
         self.outgoing_sequence_flows = {}
         self.outgoing_sequence_flows_by_id = {}
         self.lane = lane
         self.documentation = None
 
-    def connect_outgoing(self, taskspec, sequence_flow_id, sequence_flow_name, documentation):
+    def connect_outgoing(self, taskspec, sequence_flow_id, sequence_flow_name,
+                         documentation):
         """
         Connect this task spec to the indicated child.
 
         :param sequence_flow_id: The ID of the connecting sequenceFlow node.
-        :param sequence_flow_name: The name of the connecting sequenceFlow node.
+
+        :param sequence_flow_name: The name of the connecting sequenceFlow
+        node.
         """
         self.connect(taskspec)
-        s = SequenceFlow(sequence_flow_id, sequence_flow_name, documentation, taskspec)
+        s = SequenceFlow(
+            sequence_flow_id, sequence_flow_name, documentation, taskspec)
         self.outgoing_sequence_flows[taskspec.name] = s
         self.outgoing_sequence_flows_by_id[sequence_flow_id] = s
 
-    def connect_outgoing_if(self, condition, taskspec, sequence_flow_id, sequence_flow_name, documentation):
+    def connect_outgoing_if(self, condition, taskspec, sequence_flow_id,
+                            sequence_flow_name, documentation):
         """
-        Connect this task spec to the indicated child, if the condition evaluates to true.
-        This should only be called if the task has a connect_if method (e.g. ExclusiveGateway).
+        Connect this task spec to the indicated child, if the condition
+        evaluates to true. This should only be called if the task has a
+        connect_if method (e.g. ExclusiveGateway).
 
         :param sequence_flow_id: The ID of the connecting sequenceFlow node.
-        :param sequence_flow_name: The name of the connecting sequenceFlow node.
+
+        :param sequence_flow_name: The name of the connecting sequenceFlow
+        node.
         """
         self.connect_if(_BpmnCondition(condition), taskspec)
-        s = SequenceFlow(sequence_flow_id, sequence_flow_name, documentation, taskspec)
+        s = SequenceFlow(
+            sequence_flow_id, sequence_flow_name, documentation, taskspec)
         self.outgoing_sequence_flows[taskspec.name] = s
         self.outgoing_sequence_flows_by_id[sequence_flow_id] = s
 
@@ -99,7 +117,8 @@ class BpmnSpecMixin(TaskSpec):
 
     def has_outgoing_sequence_flow(self, id):
         """
-        Returns true if the SequenceFlow with the specified ID is leaving this task.
+        Returns true if the SequenceFlow with the specified ID is leaving this
+        task.
         """
         return id in self.outgoing_sequence_flows_by_id
 
@@ -107,24 +126,25 @@ class BpmnSpecMixin(TaskSpec):
         """
         Returns a list of the names of outgoing sequences. Some may be None.
         """
-        return sorted([s.name for s in self.outgoing_sequence_flows_by_id.itervalues()])
+        return sorted([s.name for s in
+                       list(self.outgoing_sequence_flows_by_id.values())])
 
     def get_outgoing_sequences(self):
         """
-        Returns a list of the names of outgoing sequences. Some may be None.
+        Returns a list of outgoing sequences. Some may be None.
         """
-        return self.outgoing_sequence_flows_by_id.itervalues()
+        return iter(list(self.outgoing_sequence_flows_by_id.values()))
 
     def accept_message(self, my_task, message):
         """
-        A subclass should override this method if they want to be notified of the receipt of a message
-        when in a WAITING state.
+        A subclass should override this method if they want to be notified of
+        the receipt of a message when in a WAITING state.
 
         Returns True if the task did process the message.
         """
         return False
 
-    ######### Hooks for Custom BPMN tasks ##########
+    # Hooks for Custom BPMN tasks ##########
 
     def entering_waiting_state(self, my_task):
         """
@@ -158,7 +178,7 @@ class BpmnSpecMixin(TaskSpec):
         """
         pass
 
-    ################################################
+    #
 
     def _on_complete_hook(self, my_task):
         super(BpmnSpecMixin, self)._on_complete_hook(my_task)
@@ -176,15 +196,14 @@ class BpmnSpecMixin(TaskSpec):
         if not my_task.workflow._is_busy_with_restore():
             self.entering_cancelled_state(my_task)
 
-    def _update_state_hook(self, my_task):
+    def _update_hook(self, my_task):
         prev_state = my_task.state
-        super(BpmnSpecMixin, self)._update_state_hook(my_task)
-        if prev_state != Task.WAITING and my_task.state == Task.WAITING and not my_task.workflow._is_busy_with_restore():
+        super(BpmnSpecMixin, self)._update_hook(my_task)
+        if (prev_state != Task.WAITING and my_task.state == Task.WAITING and
+                not my_task.workflow._is_busy_with_restore()):
             self.entering_waiting_state(my_task)
 
     def _on_ready_before_hook(self, my_task):
         super(BpmnSpecMixin, self)._on_ready_before_hook(my_task)
         if not my_task.workflow._is_busy_with_restore():
             self.entering_ready_state(my_task)
-
-
