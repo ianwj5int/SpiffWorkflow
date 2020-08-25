@@ -15,11 +15,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 import ConfigParser
-from StringIO import StringIO
+from cStringIO import StringIO
 import glob
 import hashlib
 import inspect
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 import zipfile
 from optparse import OptionParser, OptionGroup
 import os

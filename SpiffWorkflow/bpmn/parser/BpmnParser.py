@@ -32,7 +32,7 @@ from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.parser.ProcessParser import ProcessParser
 from SpiffWorkflow.bpmn.parser.util import *
 from SpiffWorkflow.bpmn.parser.task_parsers import *
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 
 class BpmnParser(object):
     """
