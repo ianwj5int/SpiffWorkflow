@@ -18,7 +18,7 @@ from SpiffWorkflow.Task import Task
 from SpiffWorkflow.bpmn.specs.UnstructuredJoin import UnstructuredJoin
 from SpiffWorkflow.specs.Simple import Simple
 from SpiffWorkflow.specs.WorkflowSpec import WorkflowSpec
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 
 class _EndJoin(UnstructuredJoin):
 

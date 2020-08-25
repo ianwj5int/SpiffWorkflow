@@ -15,8 +15,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 import ConfigParser
-from StringIO import StringIO
-import xml.etree.ElementTree as ET
+from cStringIO import StringIO
+import lxml.etree as ET
 import zipfile
 import os
 from SpiffWorkflow.bpmn.parser.BpmnParser import BpmnParser

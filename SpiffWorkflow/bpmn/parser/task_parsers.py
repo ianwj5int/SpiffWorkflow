@@ -18,7 +18,7 @@ from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.parser.TaskParser import TaskParser
 from SpiffWorkflow.bpmn.parser.util import *
 from SpiffWorkflow.bpmn.specs.event_definitions import TimerEventDefinition, MessageEventDefinition
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 
 class StartEventParser(TaskParser):
     """
