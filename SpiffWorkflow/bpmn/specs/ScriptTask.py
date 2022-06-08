@@ -45,15 +45,5 @@ class ScriptTask(Simple, BpmnSpecMixin):
         if task.workflow._is_busy_with_restore():
             return
         assert not task.workflow.read_only
-        try:
-            task.workflow.script_engine.execute(task, self.script, **task.data)
-        except Exception:
-            LOG.error('Error executing ScriptTask; task=%r',
-                      task, exc_info=True)
-            # set state to WAITING (because it is definitely not COMPLETED)
-            # and raise WorkflowException pointing to this task because
-            # maybe upstream someone will be able to handle this situation
-            task._setstate(Task.WAITING, force=True)
-            raise WorkflowTaskExecException(
-                task, 'Error during script execution')
+        task.workflow.script_engine.execute(task, self.script, **task.data)
         super(ScriptTask, self)._on_complete_hook(task)
