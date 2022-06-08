@@ -45,5 +45,9 @@ class ScriptTask(Simple, BpmnSpecMixin):
         if task.workflow._is_busy_with_restore():
             return
         assert not task.workflow.read_only
+        # We have reverted an upstream change which included try...except
+        # because this prevented XmlFunctionResponse and similar exceptions
+        # being propagated to the j5 user interface, which broke pop up
+        # messages.
         task.workflow.script_engine.execute(task, self.script, **task.data)
         super(ScriptTask, self)._on_complete_hook(task)
